@@ -8,6 +8,7 @@ class Client(object):
         Sets up the message queue and spawns a worker thread to maintain the connection and do the work.
         :return:
         """
+        self._current_trail = 0
         self._queue = Queue.Queue()
         self._stopper = threading.Event()
         self._worker = sender.MessageSender(self._stopper, self._queue, system_name, system_type, resource_identifier, sas_address)
@@ -23,3 +24,11 @@ class Client(object):
         self._stopper.set()
         self._queue.join()
         self._worker.join()
+
+    def send(self, message):
+        self._queue.put(message)
+
+    def new_trail(self):  # TODO: make atomic
+        self._current_trail += 1
+        return self._current_trail
+

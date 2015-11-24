@@ -1,5 +1,5 @@
 from .messages import Event, Marker, TrailAssoc
-from .sas_client import Client
+from .main import Client
 
 _client = None
 
@@ -18,3 +18,7 @@ def stop():
     """
     global _client
     _client.stop()
+
+
+def new_trail():
+    return _client.new_trail()

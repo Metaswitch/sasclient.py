@@ -1,3 +1,5 @@
+from . import _client
+
 class Message(object):
     """
     Message that can be sent to SAS
@@ -11,6 +13,12 @@ class Message(object):
         :return: Serialized version of the message
         """
         return str(self)  # Obviously not final implementation
+
+    def send(self):
+        """
+        Add self to the message queue.
+        """
+        _client.send(self)
 
 
 class Init(Message):
