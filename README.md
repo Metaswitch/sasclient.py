@@ -10,9 +10,9 @@ import sas-client
 
 sas-client.init(...)
 
-trail = sas-client.new_trail()
+trail = sas-client.Trail()
 
-marker = sas-client.Marker()
+marker = sas-client.Marker(trail, ...)
 # set things on the marker
 marker.send()
 

@@ -4,7 +4,7 @@ import messages
 
 class MessageSender(threading.Thread):
     """
-    The thread which does the work on the queue.
+    The thread which does work on the message queue.
     """
 
     def __init__(self, stopper, queue, system_name, system_type, resource_identifier, sas_address):

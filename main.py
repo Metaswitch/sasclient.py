@@ -6,7 +6,6 @@ class Client(object):
     def __init__(self, system_name, system_type, resource_identifier, sas_address):
         """
         Sets up the message queue and spawns a worker thread to maintain the connection and do the work.
-        :return:
         """
         self._current_trail = 0
         self._queue = Queue.Queue()
@@ -19,7 +18,6 @@ class Client(object):
         """
         Stop the worker thread, closing the connection. Queued messages will be dropped.
         The worker thread is a daemon, so it isn't usually necessary to call this, but a user can if they like.
-        :return:
         """
         self._stopper.set()
         self._queue.join()
@@ -28,7 +26,10 @@ class Client(object):
     def send(self, message):
         self._queue.put(message)
 
-    def new_trail(self):  # TODO: make atomic
-        self._current_trail += 1
-        return self._current_trail
 
+class Trail(object):
+    next_trail = 0
+
+    def __init__(self):
+        self._trail = Trail.next_trail
+        Trail.next_trail += 1  # TODO: make atomic
