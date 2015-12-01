@@ -5,13 +5,14 @@ from metaswitch.sasclient import sender
 
 
 class Client(object):
-    def __init__(self, system_name, system_type, resource_identifier, sas_address, sas_port, interface_version, protocol_version):
+    def __init__(self, system_name, system_type, resource_identifier, sas_address, sas_port):
         """
         Sets up the message queue and spawns a worker thread to maintain the connection and do the work.
         """
         self._queue = Queue.Queue()
         self._stopper = threading.Event()
-        self._worker = sender.MessageSender(self._stopper, self._queue, system_name, system_type, resource_identifier, sas_address, sas_port)
+        self._worker = sender.MessageSender(self._stopper, self._queue, system_name, system_type, resource_identifier,
+                                            sas_address, sas_port)
         self._worker.setDaemon(True)
         self.start()
 

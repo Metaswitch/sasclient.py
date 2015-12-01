@@ -1,6 +1,11 @@
-from metaswitch.sasclient import INTERFACE_VERSION, PROTOCOL_VERSION
 import struct
 import time
+
+# This client uses interface version 3
+INTERFACE_VERSION = 3
+
+# The protocol version is fixed
+PROTOCOL_VERSION = "v0.1"
 
 # Message types
 MESSAGE_INITIALISATION = 1
