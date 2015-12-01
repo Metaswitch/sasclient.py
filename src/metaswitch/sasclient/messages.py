@@ -109,16 +109,16 @@ class TrailAssoc(Message):
 
     def __init__(self, trail_a, trail_b, scope):
         super(TrailAssoc, self).__init__()
-        self.trail_a = trail_a
-        self.trail_b = trail_b
+        self.trail_a_id = trail_a.get_trail_id()
+        self.trail_b_id = trail_b.get_trail_id()
         self.scope = scope
         self.msg_type = TrailAssoc.msg_type
 
     def serialize_body(self):
         return struct.pack(
                 '!qqb',
-                self.trail_a,
-                self.trail_b,
+                self.trail_a_id,
+                self.trail_b_id,
                 self.scope)
 
 
@@ -162,13 +162,13 @@ class Event(DataMessage):
 
     def __init__(self, trail, event_id, instance_id, static_params, var_params):
         super(Event, self).__init__(static_params, var_params)
-        self.trail = trail
+        self.trail_id = trail.get_trail_id()
         self.event_id = event_id
         self.instance_id = instance_id
         self.msg_type = Event.msg_type
 
     def serialize_body(self):
-        return struct.pack('!qii', self.trail, self.event_id, self.instance_id) + self.serialize_params()
+        return struct.pack('!qii', self.trail_id, self.event_id, self.instance_id) + self.serialize_params()
 
 
 class Marker(DataMessage):
@@ -185,7 +185,7 @@ class Marker(DataMessage):
 
     def __init__(self, trail, marker_id, instance_id, flags, scope, static_params, var_params):
         super(Marker, self).__init__(static_params, var_params)
-        self.trail = trail
+        self.trail_id = trail.get_trail_id()
         self.marker_id = marker_id
         self.instance_id = instance_id
         self.flags = flags
@@ -193,7 +193,7 @@ class Marker(DataMessage):
         self.msg_type = Marker.msg_type
 
     def serialize_body(self):
-        return struct.pack('!qiibb', self.trail, self.marker_id, self.instance_id, self.flags, self.scope) + self.serialize_params()
+        return struct.pack('!qiibb', self.trail_id, self.marker_id, self.instance_id, self.flags, self.scope) + self.serialize_params()
 
 
 class Heartbeat(Message):
