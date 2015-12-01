@@ -28,3 +28,11 @@ def stop():
     """
     global _client
     _client.stop()
+
+
+def send():
+    """
+    Put a message on the queue
+    """
+    global _client
+    _client.send()

@@ -1,4 +1,4 @@
-from . import _client, INTERFACE_VERSION, PROTOCOL_VERSION
+from . import INTERFACE_VERSION, PROTOCOL_VERSION
 import struct
 import time
 
@@ -43,12 +43,6 @@ class Message(object):
         body = self.serialize_body()
         header = self.serialize_header(len(body))
         return header + body
-
-    def send(self):
-        """
-        Add self to the message queue.
-        """
-        _client.send(self)
 
 
 class Init(Message):

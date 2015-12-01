@@ -14,7 +14,8 @@ trail = sas-client.Trail()
 
 marker = sas-client.Marker(trail, ...)
 # set things on the marker
-marker.send()
+
+sas_client.send(marker)
 
 sas-client.stop()
 ```
