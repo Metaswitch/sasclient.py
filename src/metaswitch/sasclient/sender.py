@@ -91,7 +91,7 @@ class MessageSender(threading.Thread):
         self._reconnect_wait = MIN_RECONNECT_WAIT_TIME
 
     def disconnect(self):
-        self._sas_sock.shutdown()
+        self._sas_sock.shutdown(socket.SHUT_RDWR)
         self._sas_sock.close()
         # TODO: catch this exception
 
