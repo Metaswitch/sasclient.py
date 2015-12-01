@@ -3,7 +3,7 @@ import socket
 import time
 import Queue
 
-from src.metaswitch.sasclient import messages
+from metaswitch.sasclient import messages
 
 MIN_RECONNECT_WAIT_TIME = 100
 MAX_RECONNECT_WAIT_TIME = 5000

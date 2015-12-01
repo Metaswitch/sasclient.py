@@ -1,4 +1,4 @@
-from src.metaswitch.sasclient.main import Client
+from metaswitch.sasclient.main import Client
 
 _client = None
 

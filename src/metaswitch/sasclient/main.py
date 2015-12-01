@@ -1,7 +1,7 @@
 import Queue
 import threading
 
-from src.metaswitch.sasclient import sender
+from metaswitch.sasclient import sender
 
 
 class Client(object):
