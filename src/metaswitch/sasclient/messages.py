@@ -1,4 +1,4 @@
-from . import INTERFACE_VERSION, PROTOCOL_VERSION
+from metaswitch.sasclient import INTERFACE_VERSION, PROTOCOL_VERSION
 import struct
 import time
 
