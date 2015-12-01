@@ -1,5 +1,5 @@
 from metaswitch.sasclient.main import Client, Trail
-from metaswitch.sasclient.messages import Event, TrailAssoc, Marker
+from metaswitch.sasclient.messages import Event, TrailAssoc, Marker, SCOPE_NONE, SCOPE_BRANCH, SCOPE_TRACE
 
 
 _client = None
@@ -31,9 +31,9 @@ def stop():
     _client.stop()
 
 
-def send():
+def send(message):
     """
     Put a message on the queue
     """
     global _client
-    _client.send()
+    _client.send(message)

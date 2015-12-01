@@ -14,6 +14,11 @@ MESSAGE_EVENT = 3
 MESSAGE_MARKER = 4
 MESSAGE_HEARTBEAT = 5
 
+# Scopes
+SCOPE_NONE = 0
+SCOPE_BRANCH = 1
+SCOPE_TRACE = 2
+
 
 class Message(object):
     """
