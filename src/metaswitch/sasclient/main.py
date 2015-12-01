@@ -1,7 +1,8 @@
 import Queue
 import threading
+import logging
 
-from metaswitch.sasclient import sender, LOGGER
+from metaswitch.sasclient import sender
 
 
 class Client(object):
@@ -13,7 +14,6 @@ class Client(object):
         self._stopper = None
         self._worker = None
 
-        LOGGER.debug("Starting SAS client")
         self.start(system_name, system_type, resource_identifier, sas_address, sas_port)
 
     def start(self, system_name, system_type, resource_identifier, sas_address, sas_port):
@@ -21,6 +21,7 @@ class Client(object):
         Spins up the thread to do the work, and connects to the SAS server.
         :return:
         """
+        logging.debug("Starting SAS client")
         if self._worker:
             # We already had a worker. start must have been called twice consecutively. Log, and try to recover.
             # TODO: log error
@@ -44,6 +45,7 @@ class Client(object):
         sent.
         The worker thread is a daemon, so it isn't usually necessary to call this, but it is preferred.
         """
+        logging.debug("Stopping SAS client")
         # TODO: think about the case where the thread is connecting (with no timeout) but the system wants to stop.
         self._stopper.set()
         self._worker.join()

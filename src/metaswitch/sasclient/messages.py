@@ -8,6 +8,8 @@ INTERFACE_VERSION = 3
 PROTOCOL_VERSION = "v0.1"
 
 # Message types
+# 0 should never be used. Denotes that this is a message superclass which is invalid without subclassing.
+MESSAGE_INVALID = 0
 MESSAGE_INITIALISATION = 1
 MESSAGE_TRAIL_ASSOCIATION = 2
 MESSAGE_EVENT = 3
@@ -36,6 +38,7 @@ class Message(object):
 
     def __init__(self):
         self.timestamp = int(time.time() * 1000)
+        self.msg_type = MESSAGE_INVALID
 
     def serialize_header(self, body_length):
         return struct.  pack('!hbbq', body_length + 12, INTERFACE_VERSION, self.msg_type, self.timestamp)
@@ -74,6 +77,7 @@ class Init(Message):
         self.system_type = system_type
         self.resource_identifier = resource_identifier
         self.resource_version = resource_version
+        self.msg_type = Init.msg_type
 
     def serialize_body(self):
         return ''.join([
@@ -108,6 +112,7 @@ class TrailAssoc(Message):
         self.trail_a = trail_a
         self.trail_b = trail_b
         self.scope = scope
+        self.msg_type = TrailAssoc.msg_type
 
     def serialize_body(self):
         return struct.pack(
@@ -160,6 +165,7 @@ class Event(DataMessage):
         self.trail = trail
         self.event_id = event_id
         self.instance_id = instance_id
+        self.msg_type = Event.msg_type
 
     def serialize_body(self):
         return struct.pack('!qii', self.trail, self.event_id, self.instance_id) + self.serialize_params()
@@ -184,6 +190,7 @@ class Marker(DataMessage):
         self.instance_id = instance_id
         self.flags = flags
         self.scope = scope
+        self.msg_type = Marker.msg_type
 
     def serialize_body(self):
         return struct.pack('!qiibb', self.trail, self.marker_id, self.instance_id, self.flags, self.scope) + self.serialize_params()
@@ -194,6 +201,10 @@ class Heartbeat(Message):
     Message used to keep the connection alive. Consists of just the message header, without the timestamp.
     """
     msg_type = MESSAGE_HEARTBEAT
+
+    def __init__(self):
+        super(Heartbeat, self).__init__()
+        self.msg_type = Heartbeat.msg_type
 
     def serialize_header(self, body_length):
         return struct.pack('!hbb', body_length + 4, INTERFACE_VERSION, self.msg_type)
