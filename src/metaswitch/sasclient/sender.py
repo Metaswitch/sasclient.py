@@ -80,25 +80,25 @@ class MessageSender(threading.Thread):
         self._sas_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         # Connect. This is blocking indefinitely, but this is fine because without a connection there is nothing else to
-        # do.
-        logging.debug("Connecting to: " + str(self._sas_address) + ":" + str(self._sas_port))
-        self._sas_sock.connect((self._sas_address, self._sas_port))
-        # TODO: catch this exception somewhere.
-        # except IOError as e:
-        #     print "An I/O error occurred whilst opening socket to {0} on port {1}. Error is: {2}".format(self._sas_address, self._sas_port, e)
-        # except (socket.herror, socket.gaierror) as e:
-        #     print "An address error occurred whilst opening socket to {0} on port {1}. Error is: {2}".format(self._sas_address, self._sas_port, e)
-        # else
+        # do. If this fails, then we'll notice when we try to send the heartbeat, which will prompt the reconnect.
+        try:
+            logging.debug("Connecting to: " + str(self._sas_address) + ":" + str(self._sas_port))
+            self._sas_sock.connect((self._sas_address, self._sas_port))
+        except IOError as e:
+            logging.error("An I/O error occurred whilst opening socket to {0} on port {1}. Error is: {2}".format(self._sas_address, self._sas_port, str(e)))
+        except (socket.herror, socket.gaierror) as e:
+            logging.error("An address error occurred whilst opening socket to {0} on port {1}. Error is: {2}".format(self._sas_address, self._sas_port, str(e)))
+        else:
 
-        # Send the Init message, bypassing the queue.
-        logging.debug("Sending init message")
-        init = messages.Init(self._system_name, self._system_type, self._resource_identifier)
-        self._sas_sock.sendall(init.serialize())
-        # TODO: catch this exception somewhere
+            # Send the Init message, bypassing the queue.
+            logging.debug("Sending init message")
+            init = messages.Init(self._system_name, self._system_type, self._resource_identifier)
+            self._sas_sock.sendall(init.serialize())
+            # TODO: catch this exception somewhere
 
-        # Connection is successful. Reset the time to wait between reconnects.
-        logging.debug("Successfully connected")
-        self._reconnect_wait = MIN_RECONNECT_WAIT_TIME
+            # Connection is successful. Reset the time to wait between reconnects.
+            logging.debug("Successfully connected")
+            self._reconnect_wait = MIN_RECONNECT_WAIT_TIME
 
     def disconnect(self):
         logging.debug("Disconnecting")
