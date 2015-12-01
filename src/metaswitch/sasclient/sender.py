@@ -6,8 +6,8 @@ import logging
 
 from metaswitch.sasclient import messages
 
-MIN_RECONNECT_WAIT_TIME = 100
-MAX_RECONNECT_WAIT_TIME = 5000
+MIN_RECONNECT_WAIT_TIME = 0.1
+MAX_RECONNECT_WAIT_TIME = 5
 
 
 # TODO logging
@@ -54,18 +54,19 @@ class MessageSender(threading.Thread):
             # TODO: other exceptions?
 
             # Send the message
-            try:
-                self._sas_sock.sendall(message.serialize())
-                logging.debug("Trying to send message:\n" + str(message.serialize()))
-            except Exception as e:
-                # TODO: add exception types. This could fail because the socket isn't open.
-                # Failed to send message. Reconnect, put the message back on the queue, and try again.
-                logging.debug("Failed to send message. Error:\n" + str(e))
-                self.reconnect()
-                self._queue.put(message)
-            finally:
-                logging.debug("Successfully sent message")
-                self._queue.task_done()
+            if message is not None:
+                try:
+                    self._sas_sock.sendall(message.serialize())
+                    logging.debug("Trying to send message:\n" + str(message.serialize()))
+                except Exception as e:
+                    # TODO: add exception types. This could fail because the socket isn't open.
+                    # Failed to send message. Reconnect, put the message back on the queue, and try again.
+                    logging.debug("Failed to send message. Error:\n" + str(e))
+                    self.reconnect()
+                    self._queue.put(message)
+                finally:
+                    logging.debug("Successfully sent message")
+                    self._queue.task_done()
 
         self.disconnect()
 
