@@ -1,7 +1,7 @@
 import Queue
 import threading
 
-from metaswitch.sasclient import sender
+from metaswitch.sasclient import sender, LOGGER
 
 
 class Client(object):
@@ -13,6 +13,7 @@ class Client(object):
         self._stopper = None
         self._worker = None
 
+        LOGGER.debug("Starting SAS client")
         self.start(system_name, system_type, resource_identifier, sas_address, sas_port)
 
     def start(self, system_name, system_type, resource_identifier, sas_address, sas_port):

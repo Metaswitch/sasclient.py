@@ -3,7 +3,7 @@ import socket
 import time
 import Queue
 
-from metaswitch.sasclient import messages
+from metaswitch.sasclient import messages, LOGGER
 
 MIN_RECONNECT_WAIT_TIME = 100
 MAX_RECONNECT_WAIT_TIME = 5000
@@ -48,21 +48,20 @@ class MessageSender(threading.Thread):
                 message = self._queue.get(True, 1)
             except Queue.Empty:
                 # No message for a second, send a heartbeat
-                message = messages.Heartbeat()
+                self._sas_sock.sendall(messages.Heartbeat().serialize())
             # TODO: other exceptions?
 
             # Send the message
             try:
                 self._sas_sock.sendall(message.serialize())
+                LOGGER.debug("Trying to send message:\n" + str(message.serialize()))
             except:
                 # TODO: add exception types. This could fail because the socket isn't open.
                 # Failed to send message. Reconnect, put the message back on the queue, and try again.
                 self.reconnect()
-                if not isinstance(message, messages.Heartbeat):
-                    self._queue.put(message)
+                self._queue.put(message)
             finally:
-                if not isinstance(message, messages.Heartbeat):
-                    self._queue.task_done()
+                self._queue.task_done()
 
         self.disconnect()
 
