@@ -1,4 +1,4 @@
-from . import _client, PROTOCOL_VERSION
+from . import _client, INTERFACE_VERSION, PROTOCOL_VERSION
 import struct
 import time
 
@@ -12,16 +12,28 @@ MESSAGE_HEARTBEAT = 5
 
 class Message(object):
     """
-    Message that can be sent to SAS
+    Message that can be sent to SAS. All messages are made of two parts, a header and a body, the format of which are
+    specified by the VPED protocol. Strings are encoded as length + data, denoted by "1+n".
+
+    The header is of the form:
+    2 bytes - length of message (including header)
+    1 byte - the protocol version
+    1 byte - the message type
+    8 bytes - the timestamp of the message (in ms) <- not present in heartbeat message
+
+    The body varies depending on the message type - see implementations.
     """
 
     def __init__(self):
         self.timestamp = int(time.time() * 1000)
 
     def serialize_header(self, body_length):
-        return struct.pack('!hbbq', body_length + 12, PROTOCOL_VERSION, self.msg_type, self.timestamp)
+        return struct.  pack('!hbbq', body_length + 12, INTERFACE_VERSION, self.msg_type, self.timestamp)
 
     def serialize_body(self):
+        """
+        Default implementation for messages with no body (e.g. heartbeat).
+        """
         return struct.pack('')
 
     def serialize(self):
@@ -42,6 +54,13 @@ class Message(object):
 class Init(Message):
     """
     Message used when connecting to SAS. Not exposed to the user app.
+    The body is of the form:
+    1+n bytes - system name
+    4 bytes - number 1 in native endian
+    1+n bytes - protocol version
+    1+n bytes - system type (e.g. sprout)
+    1+n bytes - resource bundle ID
+    1+n bytes - resource version (currently not implemented)
     """
     msg_type = MESSAGE_INITIALISATION
 
@@ -56,7 +75,7 @@ class Init(Message):
         return ''.join([
                 pack_string(self.system_name),
                 struct.pack('=i', 1),
-                pack_string('v0.1'),
+                pack_string(PROTOCOL_VERSION),
                 pack_string(self.system_type),
                 pack_string(self.resource_identifier),
                 pack_string(self.resource_version)])
@@ -71,6 +90,13 @@ def pack_string(string):
 
 
 class TrailAssoc(Message):
+    """
+    Message used to associate trails manually.
+    The body is of the form:
+    8 bytes - trail A
+    8 bytes - trail B
+    1 byte - scope
+    """
     msg_type = MESSAGE_TRAIL_ASSOCIATION
 
     def __init__(self, trail_a, trail_b, scope):
@@ -88,10 +114,22 @@ class TrailAssoc(Message):
 
 
 class DataMessage(Message):
+    """
+    Message with included variable and static parameters. These consist of a header, the message-type-specific variables
+    (in a fixed order) - see implementations, and then:
+    2 bytes - length of static parameters
+    4 bytes - static parameter 1
+    4 bytes - static parameter 2
+    ...etc.
+    2 + n bytes - variable length parameter 1 (+ length)
+    2 + n bytes - variable length parameter 2 (+ length)
+    ...etc.
+    """
     def __init__(self, static_params, var_params):
         super(DataMessage, self).__init__()
         self.static_params = static_params
-        self.var_params = [var_param.encode('UTF-8') if isinstance(var_param, unicode) else str(var_param) for var_param in var_params]
+        self.var_params = [var_param.encode('UTF-8') if isinstance(var_param, unicode) else str(var_param)
+                           for var_param in var_params]
 
     def serialize_params(self):
         static_data = ''.join([struct.pack('=i', static_param) for static_param in self.static_params])
@@ -103,6 +141,14 @@ class DataMessage(Message):
 
 
 class Event(DataMessage):
+    """
+    Message used to indicate that something has happened.
+    The body is of the form:
+    8 bytes - trail ID
+    4 bytes - event ID
+    4 bytes - instance ID (unique in codebase, to see from where this event was called)
+    static and variable params (see above)
+    """
     msg_type = MESSAGE_EVENT
 
     def __init__(self, trail, event_id, instance_id, static_params, var_params):
@@ -116,6 +162,15 @@ class Event(DataMessage):
 
 
 class Marker(DataMessage):
+    """
+    Message used to provide metadata about the trails.
+    The body is of the form:
+    8 bytes - trail ID
+    4 bytes - marker ID
+    4 bytes - instance ID
+    1 byte - flags
+    1 byte - scope
+    """
     msg_type = MESSAGE_MARKER
 
     def __init__(self, trail, marker_id, instance_id, flags, scope, static_params, var_params):
@@ -131,7 +186,10 @@ class Marker(DataMessage):
 
 
 class Heartbeat(Message):
+    """
+    Message used to keep the connection alive. Consists of just the message header, without the timestamp.
+    """
     msg_type = MESSAGE_HEARTBEAT
 
     def serialize_header(self, body_length):
-        return struct.pack('!hbb', body_length + 4, PROTOCOL_VERSION, self.msg_type)
+        return struct.pack('!hbb', body_length + 4, INTERFACE_VERSION, self.msg_type)
