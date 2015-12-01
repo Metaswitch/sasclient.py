@@ -43,15 +43,18 @@ class MessageSender(threading.Thread):
         If the queue has been terminated (via _stopper), then stop.
         Maintains the connection - if the connection is down then reconnect using connect()
         """
+        message = None
         while not self._stopper.is_set():
-            # Try to get a message off of the queue. After a second, give up and move through the loop.
-            try:
-                message = self._queue.get(True, 1)
-            except Queue.Empty:
-                # No message for a second, send a heartbeat
-                logging.debug("Sending heartbeat")
-                self._sas_sock.sendall(messages.Heartbeat().serialize())
-            # TODO: other exceptions?
+            # If we're not retrying a message, try to get a message off of the queue. After a second, give up and move
+            # through the loop.
+            if message is None:
+                try:
+                    message = self._queue.get(True, 1)
+                except Queue.Empty:
+                    # No message for a second, send a heartbeat
+                    logging.debug("Sending heartbeat")
+                    self._sas_sock.sendall(messages.Heartbeat().serialize())
+                # TODO: other exceptions?
 
             # Send the message
             if message is not None:
@@ -60,13 +63,13 @@ class MessageSender(threading.Thread):
                     logging.debug("Trying to send message:\n" + str(message.serialize()))
                 except Exception as e:
                     # TODO: add exception types. This could fail because the socket isn't open.
-                    # Failed to send message. Reconnect, put the message back on the queue, and try again.
+                    # Failed to send message. Reconnect and try again next iteration with the same message.
                     logging.debug("Failed to send message. Error:\n" + str(e))
                     self.reconnect()
-                    self._queue.put(message)
-                finally:
+                else:
                     logging.debug("Successfully sent message")
                     self._queue.task_done()
+                    message = None
 
         self.disconnect()
 
