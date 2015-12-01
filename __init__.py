@@ -3,6 +3,9 @@ from .main import Client, Trail
 
 _client = None
 
+# This client uses protocol version 3
+PROTOCOL_VERSION = 3
+
 
 def init(system_name, system_type, resource_identifier, sas_address):
     """

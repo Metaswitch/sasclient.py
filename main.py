@@ -7,12 +7,13 @@ class Client(object):
         """
         Sets up the message queue and spawns a worker thread to maintain the connection and do the work.
         """
-        self._current_trail = 0
         self._queue = Queue.Queue()
         self._stopper = threading.Event()
         self._worker = sender.MessageSender(self._stopper, self._queue, system_name, system_type, resource_identifier, sas_address)
         self._worker.setDaemon(True)
         self._worker.start()
+
+
 
     def stop(self):
         """
@@ -28,8 +29,15 @@ class Client(object):
 
 
 class Trail(object):
-    next_trail = 0
+    next_trail = 1
+    next_trail_lock = threading.Lock()
 
     def __init__(self):
         self._trail = Trail.next_trail
-        Trail.next_trail += 1  # TODO: make atomic
+
+        Trail.next_trail_lock.acquire()
+        Trail.next_trail += 1
+        Trail.next_trail_lock.release()
+
+    def get_trail_id(self):
+        return self._trail
