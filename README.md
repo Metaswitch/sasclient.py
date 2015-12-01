@@ -4,18 +4,16 @@ Python SAS client library
 Usage:
 
 ```python
-import sas-client
+import metaswitch.sasclient as sasclient
 
-...
+sasclient.start("ellis@ellis.cw-ngv.com", "ellis", "org.projectclearwater.20151201", "sas.cw-ngv.com")
 
-sas-client.init(...)
+trail = sasclient.Trail()
 
-trail = sas-client.Trail()
-
-marker = sas-client.Marker(trail, ...)
+marker = sasclient.Marker(trail, ...)
 # set things on the marker
 
-sas_client.send(marker)
+sasclient.send(marker)
 
-sas-client.stop()
+sasclient.stop()
 ```

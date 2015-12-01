@@ -7,16 +7,29 @@ from metaswitch.sasclient import sender
 class Client(object):
     def __init__(self, system_name, system_type, resource_identifier, sas_address, sas_port):
         """
-        Sets up the message queue and spawns a worker thread to maintain the connection and do the work.
+        Constructs the client and the message queue.
         """
         self._queue = Queue.Queue()
+        self._stopper = None
+        self._worker = None
+
+        self.start(system_name, system_type, resource_identifier, sas_address, sas_port)
+
+    def start(self, system_name, system_type, resource_identifier, sas_address, sas_port):
+        """
+        Spins up the thread to do the work, and connects to the SAS server.
+        :return:
+        """
+        if self._worker:
+            # We already had a worker. start must have been called twice consecutively. Log, and try to recover.
+            # TODO: log error
+            self.stop()
+
         self._stopper = threading.Event()
         self._worker = sender.MessageSender(self._stopper, self._queue, system_name, system_type, resource_identifier,
                                             sas_address, sas_port)
         self._worker.setDaemon(True)
-        self.start()
 
-    def start(self):
         # Make the initial connection.
         self._worker.connect()
 
@@ -25,10 +38,12 @@ class Client(object):
 
     def stop(self):
         """
-        Stop the worker thread, closing the connection. Queued messages will be left on the queue until the queue
-        is garbage collected, or the queue is reused and the messages are sent.
+        Stop the worker thread, closing the connection, and remove references to thread-related objects. Queued messages
+        will be left on the queue until the queue is garbage collected, or the queue is reused and the messages are
+        sent.
         The worker thread is a daemon, so it isn't usually necessary to call this, but it is preferred.
         """
+        # TODO: think about the case where the thread is connecting (with no timeout) but the system wants to stop.
         self._stopper.set()
         self._worker.join()
         if self._queue.empty():
@@ -37,6 +52,9 @@ class Client(object):
         else:
             # TODO: log that the queue exited with messages still on.
             pass
+
+        self._worker = None
+        self._stopper = None
 
     def send(self, message):
         self._queue.put(message)
