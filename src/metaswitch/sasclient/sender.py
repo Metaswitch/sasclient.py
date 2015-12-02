@@ -60,7 +60,8 @@ class MessageSender(threading.Thread):
             if message is not None:
                 try:
                     self._sas_sock.sendall(message.serialize())
-                    logging.debug("Trying to send message:\n" + str(message.serialize()))
+                    logging.debug("Trying to send message of type " + message.msg_type + ":\n" +
+                                  str(message.serialize()))
                 except Exception as e:
                     # TODO: add exception types. This could fail because the socket isn't open.
                     # Failed to send message. Reconnect and try again next iteration with the same message.

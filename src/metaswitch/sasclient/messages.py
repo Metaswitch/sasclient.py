@@ -2,6 +2,8 @@ import struct
 import time
 from metaswitch.sasclient.constants import *
 
+RESOURCE_BUNDLE_BASE = 0x0F000000
+
 
 class Message(object):
     """
@@ -153,7 +155,7 @@ class Event(DataMessage):
     Message used to indicate that something has happened.
     The body is of the form:
     8 bytes - trail ID
-    4 bytes - event ID
+    4 bytes - event ID - because we use interface version 3, we need to bitwise OR this with RESOURCE_BUNDLE_BASE
     4 bytes - instance ID (unique in codebase, to see from where this event was called)
     static and variable params (see above)
     """
@@ -171,7 +173,7 @@ class Event(DataMessage):
         self.msg_type = Event.msg_type
 
     def serialize_body(self):
-        return struct.pack('!qii', self.trail_id, self.event_id, self.instance_id) + self.serialize_params()
+        return struct.pack('!qii', self.trail_id, self.event_id | RESOURCE_BUNDLE_BASE, self.instance_id) + self.serialize_params()
 
     def set_instance_id(self, instance_id):
         """
