@@ -19,7 +19,7 @@ def start(system_name, system_type, resource_identifier, sas_address):
     :param sas_address: The hostname or IP address of the SAS server to communicate with, (no port).
     """
     # Set up logger
-    logging.basicConfig(filename='/var/log/sasclient.log', level=logging.DEBUG)
+    logging.basicConfig(filename='/var/tmp/sasclient.log', level=logging.DEBUG)
 
     global _client
     if _client is not None:
