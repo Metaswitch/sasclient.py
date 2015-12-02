@@ -1,4 +1,4 @@
-# sas-client
+# sasclient
 Python SAS client library
 
 Usage:
