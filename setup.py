@@ -11,7 +11,7 @@ from logging import StreamHandler
 # _log.addHandler(_handler)
 
 setup(
-    name='sasclient',
+    name='metaswitchsasclient',
     version='0.1',
     packages=find_packages('src'),
     package_dir={'':'src'},
