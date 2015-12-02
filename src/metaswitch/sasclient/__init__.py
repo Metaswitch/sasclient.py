@@ -1,5 +1,6 @@
 from metaswitch.sasclient.main import Client, Trail
-from metaswitch.sasclient.messages import Event, TrailAssoc, Marker, SCOPE_NONE, SCOPE_BRANCH, SCOPE_TRACE
+from metaswitch.sasclient.messages import Event, TrailAssoc, Marker
+from metaswitch.sasclient.constants import *
 import logging
 
 

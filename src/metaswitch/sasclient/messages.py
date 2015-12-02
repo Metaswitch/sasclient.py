@@ -1,25 +1,6 @@
 import struct
 import time
-
-# This client uses interface version 3
-INTERFACE_VERSION = 3
-
-# The protocol version is fixed
-PROTOCOL_VERSION = "v0.1"
-
-# Message types
-# 0 should never be used. Denotes that this is a message superclass which is invalid without subclassing.
-MESSAGE_INVALID = 0
-MESSAGE_INITIALISATION = 1
-MESSAGE_TRAIL_ASSOCIATION = 2
-MESSAGE_EVENT = 3
-MESSAGE_MARKER = 4
-MESSAGE_HEARTBEAT = 5
-
-# Scopes
-SCOPE_NONE = 0
-SCOPE_BRANCH = 1
-SCOPE_TRACE = 2
+from metaswitch.sasclient.constants import *
 
 
 class Message(object):
@@ -38,7 +19,7 @@ class Message(object):
 
     def __init__(self):
         self.timestamp = int(time.time() * 1000)
-        self.msg_type = MESSAGE_INVALID
+        self.msg_type = None
 
     def serialize_header(self, body_length):
         return struct.  pack('!hbbq', body_length + 12, INTERFACE_VERSION, self.msg_type, self.timestamp)
@@ -148,6 +129,24 @@ class DataMessage(Message):
 
         return static_data + var_data
 
+    def add_static_params(self, static_params):
+        """
+        Appends provided params to event's static-length params.
+        :param static_params: list of static params
+        :return: self, for fluent interface
+        """
+        self.static_params += static_params
+        return self
+
+    def add_variable_params(self, var_params):
+        """
+        Appends provided params to event's variable-length params.
+        :param variable: list of variable params
+        :return: self, for fluent interface
+        """
+        self.var_params += var_params
+        return self
+
 
 class Event(DataMessage):
     """
@@ -160,7 +159,11 @@ class Event(DataMessage):
     """
     msg_type = MESSAGE_EVENT
 
-    def __init__(self, trail, event_id, instance_id, static_params, var_params):
+    def __init__(self, trail, event_id, instance_id=0, static_params=None, var_params=None):
+        if not var_params:
+            var_params = []
+        if not static_params:
+            static_params = []
         super(Event, self).__init__(static_params, var_params)
         self.trail_id = trail.get_trail_id()
         self.event_id = event_id
@@ -170,6 +173,14 @@ class Event(DataMessage):
     def serialize_body(self):
         return struct.pack('!qii', self.trail_id, self.event_id, self.instance_id) + self.serialize_params()
 
+    def set_instance_id(self, instance_id):
+        """
+        :param instance_id: instance id for identifying this SAS message from within the NE code
+        :return: self, for fluent interface
+        """
+        self.instance_id = instance_id
+        return self
+
 
 class Marker(DataMessage):
     """
@@ -178,22 +189,56 @@ class Marker(DataMessage):
     8 bytes - trail ID
     4 bytes - marker ID
     4 bytes - instance ID
-    1 byte - flags
+    1 byte - flags, where FLAG_ASSOCIATE should be set if scope is not SCOPE_NONE, and if this is the case
+             FLAG_NO_REACTIVATE may also be set
     1 byte - scope
     """
     msg_type = MESSAGE_MARKER
 
-    def __init__(self, trail, marker_id, instance_id, flags, scope, static_params, var_params):
+    def __init__(self, trail, marker_id, instance_id=0, reactivate=True, scope=SCOPE_NONE, static_params=None, var_params=None):
+        if not var_params:
+            var_params = []
+        if not static_params:
+            static_params = []
         super(Marker, self).__init__(static_params, var_params)
         self.trail_id = trail.get_trail_id()
         self.marker_id = marker_id
         self.instance_id = instance_id
-        self.flags = flags
+        self.reactivate = reactivate
         self.scope = scope
         self.msg_type = Marker.msg_type
 
     def serialize_body(self):
-        return struct.pack('!qiibb', self.trail_id, self.marker_id, self.instance_id, self.flags, self.scope) + self.serialize_params()
+        flags = 0
+        if self.scope != SCOPE_NONE:
+            flags |= FLAG_ASSOCIATE
+            if not self.reactivate:
+                flags |= FLAG_NO_REACTIVATE
+        return struct.pack('!qiibb', self.trail_id, self.marker_id, self.instance_id, flags, self.scope) + self.serialize_params()
+
+    def set_association_scope(self, scope):
+        """
+        :param scope: association scope
+        :return: self, for fluent interface
+        """
+        self.scope = scope
+        return self
+
+    def set_reactivate(self, reactivate):
+        """
+        :param reactivate: reactivate flag (boolean)
+        :return: self, for fluent interface
+        """
+        self.reactivate = reactivate
+        return self
+
+    def set_instance_id(self, instance_id):
+        """
+        :param instance_id: instance id for identifying this SAS message from within the NE code
+        :return: self, for fluent interface
+        """
+        self.instance_id = instance_id
+        return self
 
 
 class Heartbeat(Message):
