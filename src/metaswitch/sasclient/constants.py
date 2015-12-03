@@ -49,3 +49,6 @@ MARKER_ID_OUTBOUND_CALLED_URI = 0x05000005
 MARKER_ID_INBOUND_CALLED_URI = 0x05000006
 
 # For event IDs, see your resource bundle
+
+# HTTP header for use in correlating HTTP requests
+HTTP_BRANCH_HEADER_NAME = "X-SAS-HTTP-Branch-ID"
