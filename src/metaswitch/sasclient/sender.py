@@ -9,8 +9,9 @@ from metaswitch.sasclient import messages
 MIN_RECONNECT_WAIT_TIME = 0.1
 MAX_RECONNECT_WAIT_TIME = 5
 
+logger = logging.getLogger(__name__)
 
-# TODO logging
+
 # TODO some exceptions
 # TODO may want to have the normal connect time out
 class MessageSender(threading.Thread):
@@ -52,7 +53,7 @@ class MessageSender(threading.Thread):
                     message = self._queue.get(True, 1)
                 except Queue.Empty:
                     # No message for a second, send a heartbeat
-                    logging.debug("Sending heartbeat")
+                    logger.debug("SAS: Sending heartbeat")
                     self._sas_sock.sendall(messages.Heartbeat().serialize())
                 # TODO: other exceptions?
 
@@ -60,15 +61,14 @@ class MessageSender(threading.Thread):
             if message is not None:
                 try:
                     self._sas_sock.sendall(message.serialize())
-                    logging.debug("Trying to send message of type " + message.msg_type + ":\n" +
+                    logger.debug("SAS: Sending message of type " + message.msg_type + ":\n" +
                                   str(message.serialize()))
                 except Exception as e:
                     # TODO: add exception types. This could fail because the socket isn't open.
                     # Failed to send message. Reconnect and try again next iteration with the same message.
-                    logging.debug("Failed to send message. Error:\n" + str(e))
+                    logger.debug("SAS: Failed to send message. Error:\n" + str(e))
                     self.reconnect()
                 else:
-                    logging.debug("Successfully sent message")
                     self._queue.task_done()
                     message = None
 
@@ -83,26 +83,24 @@ class MessageSender(threading.Thread):
         # Connect. This is blocking indefinitely, but this is fine because without a connection there is nothing else to
         # do. If this fails, then we'll notice when we try to send the heartbeat, which will prompt the reconnect.
         try:
-            logging.debug("Connecting to: " + str(self._sas_address) + ":" + str(self._sas_port))
+            logger.debug("SAS: Connecting to: " + str(self._sas_address) + ":" + str(self._sas_port))
             self._sas_sock.connect((self._sas_address, self._sas_port))
         except IOError as e:
-            logging.error("An I/O error occurred whilst opening socket to {0} on port {1}. Error is: {2}".format(self._sas_address, self._sas_port, str(e)))
+            logger.error("SAS: An I/O error occurred whilst opening socket to {0} on port {1}. Error is: {2}".format(self._sas_address, self._sas_port, str(e)))
         except (socket.herror, socket.gaierror) as e:
-            logging.error("An address error occurred whilst opening socket to {0} on port {1}. Error is: {2}".format(self._sas_address, self._sas_port, str(e)))
+            logger.error("SAS: An address error occurred whilst opening socket to {0} on port {1}. Error is: {2}".format(self._sas_address, self._sas_port, str(e)))
         else:
 
             # Send the Init message, bypassing the queue.
-            logging.debug("Sending init message")
             init = messages.Init(self._system_name, self._system_type, self._resource_identifier)
             self._sas_sock.sendall(init.serialize())
             # TODO: catch this exception somewhere
 
             # Connection is successful. Reset the time to wait between reconnects.
-            logging.debug("Successfully connected")
             self._reconnect_wait = MIN_RECONNECT_WAIT_TIME
 
     def disconnect(self):
-        logging.debug("Disconnecting")
+        logger.debug("SAS: Disconnecting")
         self._sas_sock.shutdown(socket.SHUT_RDWR)
         self._sas_sock.close()
         # TODO: catch this exception
@@ -111,7 +109,6 @@ class MessageSender(threading.Thread):
         # If our connection is being rejected, don't spam the SAS with attempts. Use exponential back-off.
         reconnect_wait = self._reconnect_wait
         self._reconnect_wait = min(reconnect_wait * 2, MAX_RECONNECT_WAIT_TIME)
-        logging.debug("Sleeping for " + str(reconnect_wait) + " seconds before reconnecting")
         time.sleep(reconnect_wait)
 
         self.disconnect()
