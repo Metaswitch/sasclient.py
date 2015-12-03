@@ -1,22 +1,33 @@
 import Queue
 import threading
 import logging
-
-from metaswitch.sasclient import sender
+from metaswitch.sasclient import sender, DEFAULT_SAS_PORT
 
 
 class Client(object):
-    def __init__(self, system_name, system_type, resource_identifier, sas_address, sas_port):
+    def __init__(self, system_name, system_type, resource_identifier, sas_address, start=True):
         """
         Constructs the client and the message queue.
+        Start the sasclient. This should only be called once since the latest call to stop().
+        :param system_name: The system name.
+        :param system_type: The system type, e.g. "ellis", "homer"
+        :param resource_identifier: Identifier of the resource bundle, e.g. org.projectclearwater.20151201
+        :param sas_address: The hostname or IP address of the SAS server to communicate with, (no port).
+        :param start: Whether the SAS client should start immediately
         """
         self._queue = Queue.Queue()
         self._stopper = None
         self._worker = None
 
-        self.start(system_name, system_type, resource_identifier, sas_address, sas_port)
+        self._system_name = system_name
+        self._system_type = system_type
+        self._resource_identifier = resource_identifier
+        self._sas_address = sas_address
 
-    def start(self, system_name, system_type, resource_identifier, sas_address, sas_port):
+        if start:
+            self.start()
+
+    def start(self):
         """
         Spins up the thread to do the work, and connects to the SAS server.
         :return:
@@ -28,8 +39,8 @@ class Client(object):
             self.stop()
 
         self._stopper = threading.Event()
-        self._worker = sender.MessageSender(self._stopper, self._queue, system_name, system_type, resource_identifier,
-                                            sas_address, sas_port)
+        self._worker = sender.MessageSender(self._stopper, self._queue, self._system_name, self._system_type,
+                                            self._resource_identifier, self._sas_address, DEFAULT_SAS_PORT)
         self._worker.setDaemon(True)
 
         # Make the initial connection.
