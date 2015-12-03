@@ -61,7 +61,7 @@ class MessageSender(threading.Thread):
             if message is not None:
                 try:
                     self._sas_sock.sendall(message.serialize())
-                    logger.debug("SAS: Sending message of type " + message.msg_type + ":\n" +
+                    logger.debug("SAS: Sending message of type " + str(message.msg_type) + ":\n" +
                                   str(message.serialize()))
                 except Exception as e:
                     # TODO: add exception types. This could fail because the socket isn't open.
