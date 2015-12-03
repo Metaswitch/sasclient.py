@@ -3,11 +3,11 @@ import threading
 import logging
 from metaswitch.sasclient import sender
 
-
 # The default SAS port, at the moment not configurable
 DEFAULT_SAS_PORT = 6761
 
 logger = logging.getLogger(__name__)
+
 
 class Client(object):
     def __init__(self, system_name, system_type, resource_identifier, sas_address, start=True):

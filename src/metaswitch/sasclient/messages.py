@@ -2,6 +2,7 @@ import struct
 import time
 from metaswitch.sasclient.constants import *
 
+# The base event ID for all events specified by resource bundles.
 RESOURCE_BUNDLE_BASE = 0x0F000000
 
 
@@ -120,33 +121,37 @@ class DataMessage(Message):
     def __init__(self, static_params, var_params):
         super(DataMessage, self).__init__()
         self.static_params = static_params
-        self.var_params = [var_param.encode('UTF-8') if isinstance(var_param, unicode) else str(var_param)
-                           for var_param in var_params]
+        self.var_params = var_params
 
     def serialize_params(self):
         static_data = ''.join([struct.pack('=i', static_param) for static_param in self.static_params])
         static_data = struct.pack('!h', len(static_data)) + static_data
 
-        var_data = ''.join([struct.pack('!h', len(var_param)) + str(var_param) for var_param in self.var_params])
+        encoded_var_params = [var_param.encode('UTF-8') if isinstance(var_param, unicode) else str(var_param)
+                           for var_param in self.var_params]
+        var_data = ''.join([struct.pack('!h', len(var_param)) + str(var_param) for var_param in encoded_var_params])
 
         return static_data + var_data
 
+    # Fluent interfaces to add params
     def add_static_params(self, static_params):
-        """
-        Appends provided params to event's static-length params.
-        :param static_params: list of static params
-        :return: self, for fluent interface
-        """
+        if not isinstance(static_params, list):
+            raise TypeError("Expecting a list")
         self.static_params += static_params
         return self
 
+    def add_static_param(self, static_param):
+        self.static_params.append(static_param)
+        return self
+
     def add_variable_params(self, var_params):
-        """
-        Appends provided params to event's variable-length params.
-        :param variable: list of variable params
-        :return: self, for fluent interface
-        """
+        if not isinstance(var_params, list):
+            raise TypeError("Expecting a list")
         self.var_params += var_params
+        return self
+
+    def add_variable_param(self, var_param):
+        self.var_params.append(var_param)
         return self
 
 
