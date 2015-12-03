@@ -1,8 +1,11 @@
 import Queue
 import threading
 import logging
-from metaswitch.sasclient import sender, DEFAULT_SAS_PORT
+from metaswitch.sasclient import sender
 
+
+# The default SAS port, at the moment not configurable
+DEFAULT_SAS_PORT = 6761
 
 class Client(object):
     def __init__(self, system_name, system_type, resource_identifier, sas_address, start=True):
