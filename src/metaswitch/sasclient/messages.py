@@ -25,7 +25,7 @@ class Message(object):
         self.msg_type = None
 
     def serialize_header(self, body_length):
-        return struct.  pack('!hbbq', body_length + 12, INTERFACE_VERSION, self.msg_type, self.timestamp)
+        return struct.pack('!hbbq', body_length + 12, INTERFACE_VERSION, self.msg_type, self.timestamp)
 
     def serialize_body(self):
         """

@@ -37,7 +37,7 @@ class Client(object):
         Spins up the thread to do the work, and connects to the SAS server.
         :return:
         """
-        logger.debug("SAS: Starting SAS client")
+        logger.info("Starting SAS client")
         if self._worker:
             # We already had a worker. start must have been called twice consecutively. Try to recover.
             self.stop()
@@ -60,12 +60,11 @@ class Client(object):
         sent.
         The worker thread is a daemon, so it isn't usually necessary to call this, but it is preferred.
         """
-        logger.debug("SAS: Stopping SAS client")
-        # TODO: think about the case where the thread is connecting (with no timeout) but the system wants to stop.
+        logger.info("Stopping SAS client")
         self._stopper.set()
         self._worker.join()
         if not self._queue.empty():
-            logger.debug("SAS: SAS client was stopped with messages still on the queue")
+            logger.warn("SAS client was stopped with messages still on the queue")
 
         self._worker = None
         self._stopper = None
