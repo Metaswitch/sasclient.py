@@ -78,9 +78,8 @@ class Trail(object):
     next_trail_lock = threading.Lock()
 
     def __init__(self):
-        self._trail = Trail.next_trail
-
         Trail.next_trail_lock.acquire()
+        self._trail = Trail.next_trail
         Trail.next_trail += 1
         Trail.next_trail_lock.release()
 
