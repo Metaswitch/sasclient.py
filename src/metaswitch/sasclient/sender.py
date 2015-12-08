@@ -86,12 +86,12 @@ class MessageSender(threading.Thread):
         # Connect. This is blocking indefinitely, but this is fine because without a connection there is nothing else to
         # do. If this fails, then we'll notice when we try to send the heartbeat, which will prompt the reconnect.
         try:
-            logger.info("Connecting to: {0}:{1}", self._sas_address, self._sas_port)
+            logger.info("Connecting to: %s:%s", self._sas_address, self._sas_port)
             self._sas_sock.connect((self._sas_address, self._sas_port))
         except IOError as e:
-            logger.error("An I/O error occurred whilst opening socket to {0} on port {1}. Error is: {2}", self._sas_address, self._sas_port, str(e))
+            logger.error("An I/O error occurred whilst opening socket to %s on port %s. Error is: %s", self._sas_address, self._sas_port, str(e))
         except (socket.herror, socket.gaierror) as e:
-            logger.error("An address error occurred whilst opening socket to {0} on port {1}. Error is: {2}", self._sas_address, self._sas_port, str(e))
+            logger.error("An address error occurred whilst opening socket to %s on port %s. Error is: %s", self._sas_address, self._sas_port, str(e))
         else:
             # Send the Init message, bypassing the queue. Don't reconnect
             init = messages.Init(self._system_name, self._system_type, self._resource_identifier)
@@ -113,14 +113,14 @@ class MessageSender(threading.Thread):
         :return: boolean success
         """
         msg_array = message.serialize()
-        logger.debug("Sending message of type {0:d}: {1}", message.msg_type,
+        logger.debug("Sending message of type %d: %s", message.msg_type,
                      ':'.join(x.encode('hex') for x in msg_array))
         try:
             self._sas_sock.sendall(msg_array)
             return True
         except Exception as e:
             # TODO: Find out what these exceptions are
-            logger.error("Failed to send message: Error: {0}\n{1}", str(type(e)), str(e))
+            logger.error("Failed to send message. Error: $s\n$s", str(type(e)), str(e))
             return False
 
     def reconnect(self):
