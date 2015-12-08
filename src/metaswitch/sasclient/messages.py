@@ -83,7 +83,7 @@ class Init(Message):
                 "   System type: {type}\n" +
                 "   Resource identifier: {id}\n" +
                 "   Resource version: {ver}").format(
-                    str=super(Message, self).__str__(),
+                    str=Message.__str__(self),
                     name=self.system_name,
                     type=self.system_type,
                     id=self.resource_identifier,
@@ -127,7 +127,7 @@ class TrailAssoc(Message):
                 "   Trail A: {trail_a:d}\n" +
                 "   Trail B: {trail_b:d}\n" +
                 "   Scope: {scope:d}").format(
-                    str=super(Message, self).__str__(),
+                    str=Message.__str__(self),
                     trail_a=self.trail_a_id,
                     trail_b=self.trail_b_id,
                     scope=self.scope)
@@ -185,7 +185,7 @@ class DataMessage(Message):
         return ("{str}\n" +
                 "   Static parameters: {static_params}\n" +
                 "   Variable parameters: {var_params}").format(
-                    str=super(Message, self).__str__(),
+                    str=Message.__str__(self),
                     static_params=",".join([str(param) for param in self.static_params]),
                     var_params=",".join([str(param) for param in self.var_params]))
 
@@ -228,7 +228,7 @@ class Event(DataMessage):
                 "   Trail: {trail:d}\n" +
                 "   Event ID: 0x{event:x}\n" +
                 "   Instance ID: {instance:d}").format(
-                    str=super(DataMessage, self).__str__(),
+                    str=DataMessage.__str__(self),
                     trail=self.trail_id,
                     event=self.event_id,
                     instance=self.instance_id)
@@ -299,7 +299,7 @@ class Marker(DataMessage):
                 "   Instance ID: {instance:d}\n" +
                 "   Scope: {scope:d}\n" +
                 "   Reactivate: {react}").format(
-                    str=super(DataMessage, self).__str__(),
+                    str=DataMessage.__str__(self),
                     trail=self.trail_id,
                     marker=self.marker_id,
                     instance=self.instance_id,
