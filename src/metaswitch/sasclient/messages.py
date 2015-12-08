@@ -16,7 +16,7 @@ class Message(object):
     2 bytes - length of message (including header)
     1 byte - the protocol version
     1 byte - the message type
-    8 bytes - the timestamp of the message (in ms) <- not present in heartbeat message
+    8 bytes - the timestamp of the message (in ms) (not present in heartbeat message)
 
     The body varies depending on the message type - see implementations.
     """
@@ -45,6 +45,12 @@ class Message(object):
     def __str__(self):
         return "SAS Message: {0} ({1})".format(MESSAGE_STRINGS.get(self.msg_type, "Unknown type"),
                 datetime.datetime.fromtimestamp(self.timestamp / 1000).strftime('%Y-%m-%d %H:%M:%S'))
+
+    def set_timestamp(self, timestamp):
+        """
+        Set the timestamp in milliseconds.
+        """
+        self.timestamp = timestamp
 
 
 class Init(Message):
