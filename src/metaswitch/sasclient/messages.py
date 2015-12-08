@@ -1,5 +1,6 @@
 import struct
 import time
+import datetime
 from metaswitch.sasclient.constants import *
 
 # The base event ID for all events specified by resource bundles.
@@ -41,6 +42,10 @@ class Message(object):
         header = self.serialize_header(len(body))
         return header + body
 
+    def __str__(self):
+        return "SAS Message: {0} ({1})".format(MESSAGE_STRINGS.get(self.msg_type, "Unknown type"),
+                datetime.datetime.fromtimestamp(self.timestamp).strftime('%Y-%m-%d %H:%M:%S'))
+
 
 class Init(Message):
     """
@@ -71,6 +76,17 @@ class Init(Message):
                 pack_string(self.system_type),
                 pack_string(self.resource_identifier),
                 pack_string(self.resource_version)])
+
+    def __str__(self):
+        return ("{str}\n" +
+                "System name: {name}\n" +
+                "System type: {type}\n" +
+                "Resource identifier: {id}\n" +
+                "Resource version: {ver}").format(str=super(Message, self).__str__(),
+                                                  name=self.system_name,
+                                                  type=self.system_type,
+                                                  id=self.resource_identifier,
+                                                  ver=self.resource_version)
 
 
 def pack_string(string):
@@ -104,6 +120,15 @@ class TrailAssoc(Message):
                 self.trail_a_id,
                 self.trail_b_id,
                 self.scope)
+
+    def __str__(self):
+        return ("{str}\n" +
+                "Trail A: {trail_a:d}\n" +
+                "Trail B: {trail_b:d}\n" +
+                "Scope: {scope:d}").format(str=super(Message, self).__str__(),
+                                           trail_a=self.trail_a_id,
+                                           trail_b=self.trail_b_id,
+                                           scope=self.scope)
 
 
 class DataMessage(Message):
@@ -154,6 +179,14 @@ class DataMessage(Message):
         self.var_params.append(var_param)
         return self
 
+    def __str__(self):
+        return ("{str}\n" +
+                "Static parameters: {static_params}\n" +
+                "Variable parameters: {var_params}").format(
+                    str=super(Message, self).__str__(),
+                    static_params=",".join([str(param) for param in self.static_params]),
+                    var_params=",".join([str(param) for param in self.var_params]))
+
 
 class Event(DataMessage):
     """
@@ -187,6 +220,15 @@ class Event(DataMessage):
         """
         self.instance_id = instance_id
         return self
+
+    def __str__(self):
+        return ("{str}\n" +
+                "Trail: {trail:d}\n" +
+                "Event ID: {event:x}\n" +
+                "Instance ID: {instance:d}").format(str=super(DataMessage, self).__str__(),
+                                           trail=self.trail_id,
+                                           event=self.event_id,
+                                           instance=self.instance_id)
 
 
 class Marker(DataMessage):
@@ -247,6 +289,19 @@ class Marker(DataMessage):
         self.instance_id = instance_id
         return self
 
+    def __str__(self):
+        return ("{str}\n" +
+                "Trail: {trail:d}\n" +
+                "Marker ID: {marker:x}\n" +
+                "Instance ID: {instance:d}\n" +
+                "Scope: {scope:d}\n" +
+                "Reactivate: {react}").format(str=super(DataMessage, self).__str__(),
+                                              trail=self.trail_id,
+                                              marker=self.marker_id,
+                                              instance=self.instance_id,
+                                              scope=self.scope,
+                                              reactivate=("True" if self.reactivate else "False"))
+
 
 class Heartbeat(Message):
     """
@@ -260,3 +315,6 @@ class Heartbeat(Message):
 
     def serialize_header(self, body_length):
         return struct.pack('!hbb', body_length + 4, INTERFACE_VERSION, self.msg_type)
+
+    def __str__(self):
+        return "SAS Heartbeat"

@@ -1,7 +1,7 @@
 import Queue
 import threading
 import logging
-from metaswitch.sasclient import sender
+from metaswitch.sasclient import sender, constants
 
 # The default SAS port, at the moment not configurable
 DEFAULT_SAS_PORT = 6761
@@ -70,6 +70,7 @@ class Client(object):
         self._stopper = None
 
     def send(self, message):
+        logger.info("Queueing message for sending:\n%s", str(message))
         self._queue.put(message)
 
 

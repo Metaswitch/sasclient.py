@@ -4,7 +4,7 @@ import time
 import Queue
 import logging
 
-from metaswitch.sasclient import messages
+from metaswitch.sasclient import messages, constants
 
 MIN_RECONNECT_WAIT_TIME = 0.1
 MAX_RECONNECT_WAIT_TIME = 5
@@ -113,8 +113,7 @@ class MessageSender(threading.Thread):
         :return: boolean success
         """
         msg_array = message.serialize()
-        logger.debug("Sending message of type %d: %s", message.msg_type,
-                     ':'.join(x.encode('hex') for x in msg_array))
+        logger.debug("Sending message:\n%s", str(message))
         try:
             self._sas_sock.sendall(msg_array)
             return True
