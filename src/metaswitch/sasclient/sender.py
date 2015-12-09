@@ -1,3 +1,6 @@
+# @file sender.py
+# Copyright (C) 2015  Metaswitch Networks Ltd
+
 import threading
 import socket
 import time
@@ -113,7 +116,8 @@ class MessageSender(threading.Thread):
         :return: boolean success
         """
         msg_array = message.serialize()
-        logger.debug("Sending message:\n%s", str(message))
+        if not isinstance(message, messages.Heartbeat):
+            logger.debug("Sending message:\n%s", str(message))
         try:
             self._sas_sock.sendall(msg_array)
             return True

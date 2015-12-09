@@ -1,4 +1,9 @@
-# Externally visible constants
+# @file constants.py
+# Copyright (C) 2015  Metaswitch Networks Ltd
+
+"""
+Externally visible constants
+"""
 
 # This client uses interface version 3
 INTERFACE_VERSION = 3

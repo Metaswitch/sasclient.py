@@ -1,6 +1,9 @@
+# @file __init__.py
+# Copyright (C) 2015  Metaswitch Networks Ltd
+
 import logging
 
-from metaswitch.sasclient.main import Client, Trail
+from metaswitch.sasclient.main import Client, Trail, TestClient
 from metaswitch.sasclient.messages import Event, TrailAssoc, Marker
 from metaswitch.sasclient.constants import *
 
@@ -9,3 +12,4 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 # Some of our applications set logging on the root logger. Don't inherit from that by default.
 logger.propagate = False
+logger.setLevel(logging.INFO)

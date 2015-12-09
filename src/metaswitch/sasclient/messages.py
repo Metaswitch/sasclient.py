@@ -1,3 +1,6 @@
+# @file messages.py
+# Copyright (C) 2015  Metaswitch Networks Ltd
+
 import struct
 import time
 import datetime
@@ -193,7 +196,7 @@ class DataMessage(Message):
                 "   Variable parameters: {var_params}").format(
                     str=Message.__str__(self),
                     static_params=",".join([str(param) for param in self.static_params]),
-                    var_params=",".join([str(param) for param in self.var_params]))
+                    var_params="{amount} parameters".format(amount=len(self.var_params)))
 
 
 class Event(DataMessage):
@@ -232,7 +235,7 @@ class Event(DataMessage):
     def __str__(self):
         return ("{str}\n" +
                 "   Trail: {trail:d}\n" +
-                "   Event ID: 0x{event:x}\n" +
+                "   Event ID: 0x{event:06x}\n" +
                 "   Instance ID: {instance:d}").format(
                     str=DataMessage.__str__(self),
                     trail=self.trail_id,
@@ -301,7 +304,7 @@ class Marker(DataMessage):
     def __str__(self):
         return ("{str}\n" +
                 "   Trail: {trail:d}\n" +
-                "   Marker ID: 0x{marker:x}\n" +
+                "   Marker ID: 0x{marker:08x}\n" +
                 "   Instance ID: {instance:d}\n" +
                 "   Scope: {scope:d}\n" +
                 "   Reactivate: {react}").format(

@@ -1,3 +1,6 @@
+# @file main.py
+# Copyright (C) 2015  Metaswitch Networks Ltd
+
 import Queue
 import threading
 import logging
@@ -86,3 +89,17 @@ class Trail(object):
 
     def get_trail_id(self):
         return self._trail
+
+
+class TestClient(object):
+    def __init__(self):
+        self.message_queue = []
+
+    def start(self):
+        pass
+
+    def stop(self):
+        pass
+
+    def send(self, message):
+        self.message_queue.append(message)
