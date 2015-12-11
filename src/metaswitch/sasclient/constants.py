@@ -18,11 +18,11 @@ MESSAGE_EVENT = 3
 MESSAGE_MARKER = 4
 MESSAGE_HEARTBEAT = 5
 MESSAGE_STRINGS = {
-    MESSAGE_INITIALISATION : "Init",
-    MESSAGE_TRAIL_ASSOCIATION : "Trail association",
-    MESSAGE_EVENT : "Event",
-    MESSAGE_MARKER : "Marker",
-    MESSAGE_HEARTBEAT : "Heartbeat",
+    MESSAGE_INITIALISATION: "Init",
+    MESSAGE_TRAIL_ASSOCIATION: "Trail association",
+    MESSAGE_EVENT: "Event",
+    MESSAGE_MARKER: "Marker",
+    MESSAGE_HEARTBEAT: "Heartbeat",
 }
 
 # Scopes for Marker objects

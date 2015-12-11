@@ -7,7 +7,7 @@ import time
 import Queue
 import logging
 
-from metaswitch.sasclient import messages, constants
+from metaswitch.sasclient import messages
 
 MIN_RECONNECT_WAIT_TIME = 0.1
 MAX_RECONNECT_WAIT_TIME = 5
@@ -21,7 +21,15 @@ class MessageSender(threading.Thread):
     The thread which does work on the message queue.
     """
 
-    def __init__(self, stopper, queue, system_name, system_type, resource_identifier, sas_address, sas_port):
+    def __init__(
+            self,
+            stopper,
+            queue,
+            system_name,
+            system_type,
+            resource_identifier,
+            sas_address,
+            sas_port):
         super(MessageSender, self).__init__()
 
         # Objects that the thread runs on
@@ -56,8 +64,9 @@ class MessageSender(threading.Thread):
                 self.reconnect()
                 break
 
-            # If we're not retrying a message, try to get a message off of the queue. After a second, give up and move
-            # through the loop. Note that at this point in the code the socket must be connected.
+            # If we're not retrying a message, try to get a message off of the queue. After a
+            # second, give up and move through the loop. Note that at this point in the code the
+            # socket must be connected.
             if message is None:
                 try:
                     message = self._queue.get(True, 1)
@@ -81,20 +90,30 @@ class MessageSender(threading.Thread):
 
     def connect(self):
         """
-        Connects to the SAS. This involves sending an Init message, which is sent immediately and bypasses the queue.
+        Connects to the SAS. This involves sending an Init message, which is sent immediately and
+        bypasses the queue.
         If this fails, immediately call reconnect()
         """
         self._sas_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        # Connect. This is blocking indefinitely, but this is fine because without a connection there is nothing else to
-        # do. If this fails, then we'll notice when we try to send the heartbeat, which will prompt the reconnect.
+        # Connect. This is blocking indefinitely, but this is fine because without a connection
+        # there is nothing else to do. If this fails, then we'll notice when we try to send the
+        # heartbeat, which will prompt the reconnect.
         try:
             logger.info("Connecting to: %s:%s", self._sas_address, self._sas_port)
             self._sas_sock.connect((self._sas_address, self._sas_port))
         except IOError as e:
-            logger.error("An I/O error occurred whilst opening socket to %s on port %s. Error is: %s", self._sas_address, self._sas_port, str(e))
+            logger.error(
+                "An I/O error occurred whilst opening socket to %s on port %s. Error is: %s",
+                self._sas_address,
+                self._sas_port,
+                str(e))
         except (socket.herror, socket.gaierror) as e:
-            logger.error("An address error occurred whilst opening socket to %s on port %s. Error is: %s", self._sas_address, self._sas_port, str(e))
+            logger.error(
+                "An address error occurred whilst opening socket to %s on port %s. Error is: %s",
+                self._sas_address,
+                self._sas_port,
+                str(e))
         else:
             # Send the Init message, bypassing the queue. Don't reconnect
             init = messages.Init(self._system_name, self._system_type, self._resource_identifier)
@@ -129,7 +148,8 @@ class MessageSender(threading.Thread):
     def reconnect(self):
         self._connected = False
 
-        # If our connection is being rejected, don't spam the SAS with attempts. Use exponential back-off.
+        # If our connection is being rejected, don't spam the SAS with attempts. Use exponential
+        # back-off.
         reconnect_wait = self._reconnect_wait
         self._reconnect_wait = min(reconnect_wait * 2, MAX_RECONNECT_WAIT_TIME)
         time.sleep(reconnect_wait)
