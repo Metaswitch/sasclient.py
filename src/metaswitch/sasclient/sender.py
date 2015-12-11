@@ -125,9 +125,10 @@ class MessageSender(threading.Thread):
         :param message: Message to send
         :return: boolean success
         """
-        msg_array = message.serialize()
         if not isinstance(message, messages.Heartbeat):
             logger.debug("Sending message:\n%s", str(message))
+
+        msg_array = message.serialize()
         try:
             self._sas_sock.sendall(msg_array)
             return True
