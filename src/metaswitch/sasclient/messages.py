@@ -170,8 +170,8 @@ class DataMessage(Message):
     """
     def __init__(self, static_params, var_params):
         super(DataMessage, self).__init__()
-        self.static_params = static_params
-        self.var_params = var_params
+        self.static_params = static_params[:]
+        self.var_params = var_params[:]
 
     def serialize_params(self):
         static_data = ''.join(
@@ -231,9 +231,9 @@ class Event(DataMessage):
     msg_type = MESSAGE_EVENT
 
     def __init__(self, trail, event_id, instance_id=0, static_params=None, var_params=None):
-        if not var_params:
+        if var_params is None:
             var_params = []
-        if not static_params:
+        if static_params is None:
             static_params = []
         super(Event, self).__init__(static_params, var_params)
         self.trail_id = trail.get_trail_id()
@@ -288,9 +288,9 @@ class Marker(DataMessage):
             scope=SCOPE_NONE,
             static_params=None,
             var_params=None):
-        if not var_params:
+        if var_params is None:
             var_params = []
-        if not static_params:
+        if static_params is None:
             static_params = []
         super(Marker, self).__init__(static_params, var_params)
         self.trail_id = trail.get_trail_id()
