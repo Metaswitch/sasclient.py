@@ -62,29 +62,20 @@ class MessageSender(threading.Thread):
             if not self._connected:
                 # Try to reconnect and have another go at the loop.
                 self.reconnect()
-                break
+                continue
 
-            # If we're not retrying a message, try to get a message off of the queue. After a
-            # second, give up and move through the loop. Note that at this point in the code the
-            # socket must be connected.
-            if message is None:
-                try:
-                    message = self._queue.get(True, 1)
-                except Queue.Empty:
-                    # No message for a second, send a heartbeat
-                    if not self.send_message(messages.Heartbeat()):
-                        self._connected = False
-                        break
+            # Try to get a message off of the queue.  If there's nothing there after a second,
+            # send a heartbeat.
+            try:
+                message = self._queue.get(True, 1)
+            except Queue.Empty:
+                message = messages.Heartbeat()
 
-            # Send the message
-            if message is not None:
-                if self.send_message(message):
-                    self._queue.task_done()
-                    message = None
-                else:
-                    # Failed to send message - need to reconnect
-                    self._connected = False
-                    break
+            # Send the message.  If we fail, we'll want to reconnect.
+            if self.send_message(message):
+                self._queue.task_done()
+            else:
+                self._connected = False
 
         self.disconnect()
 
