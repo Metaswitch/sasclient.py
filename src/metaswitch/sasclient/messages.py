@@ -105,15 +105,15 @@ class Init(Message):
             pack_string(self.resource_version)])
 
     def __str__(self):
-        return ("{str}\n" +
+        return ("{string}\n" +
                 "   System name: {name}\n" +
-                "   System type: {type}\n" +
-                "   Resource identifier: {id}\n" +
+                "   System type: {sys_type}\n" +
+                "   Resource identifier: {res_id}\n" +
                 "   Resource version: {ver}").format(
-                    str=Message.__str__(self),
+                    string=Message.__str__(self),
                     name=self.system_name,
-                    type=self.system_type,
-                    id=self.resource_identifier,
+                    sys_type=self.system_type,
+                    res_id=self.resource_identifier,
                     ver=self.resource_version)
 
 
@@ -146,11 +146,11 @@ class TrailAssoc(Message):
         return struct.pack('!qqb', self.trail_a_id, self.trail_b_id, self.scope)
 
     def __str__(self):
-        return ("{str}\n" +
+        return ("{string}\n" +
                 "   Trail A: {trail_a:d}\n" +
                 "   Trail B: {trail_b:d}\n" +
                 "   Scope: {scope:d}").format(
-                    str=Message.__str__(self),
+                    string=Message.__str__(self),
                     trail_a=self.trail_a_id,
                     trail_b=self.trail_b_id,
                     scope=self.scope)
@@ -210,10 +210,10 @@ class DataMessage(Message):
         return self
 
     def __str__(self):
-        return ("{str}\n" +
+        return ("{string}\n" +
                 "   Static parameters: {static_params}\n" +
                 "   Variable parameters: {var_params}").format(
-                    str=Message.__str__(self),
+                    string=Message.__str__(self),
                     static_params=",".join([str(param) for param in self.static_params]),
                     var_params="{amount} parameters".format(amount=len(self.var_params)))
 
@@ -256,11 +256,11 @@ class Event(DataMessage):
         return self
 
     def __str__(self):
-        return ("{str}\n" +
+        return ("{string}\n" +
                 "   Trail: {trail:d}\n" +
                 "   Event ID: 0x{event:06x}\n" +
                 "   Instance ID: {instance:d}").format(
-                    str=DataMessage.__str__(self),
+                    string=DataMessage.__str__(self),
                     trail=self.trail_id,
                     event=self.event_id,
                     instance=self.instance_id)
@@ -339,13 +339,13 @@ class Marker(DataMessage):
         return self
 
     def __str__(self):
-        return ("{str}\n" +
+        return ("{string}\n" +
                 "   Trail: {trail:d}\n" +
                 "   Marker ID: 0x{marker:08x}\n" +
                 "   Instance ID: {instance:d}\n" +
                 "   Scope: {scope:d}\n" +
                 "   Reactivate: {react}").format(
-                    str=DataMessage.__str__(self),
+                    string=DataMessage.__str__(self),
                     trail=self.trail_id,
                     marker=self.marker_id,
                     instance=self.instance_id,
