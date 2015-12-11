@@ -91,10 +91,15 @@ class MessageSender(threading.Thread):
         try:
             logger.info("Connecting to: %s:%s", self._sas_address, self._sas_port)
             self._sas_sock.connect((self._sas_address, self._sas_port))
-        except IOError as e:
-            logger.error("An I/O error occurred whilst opening socket to %s on port %s. Error is: %s", self._sas_address, self._sas_port, str(e))
-        except (socket.herror, socket.gaierror) as e:
-            logger.error("An address error occurred whilst opening socket to %s on port %s. Error is: %s", self._sas_address, self._sas_port, str(e))
+        except IOError:
+            logger.exception("An I/O error occurred whilst opening socket to %s on port %s.",
+                             self._sas_address, self._sas_port)
+        except socket.timeout:
+            logger.exception("Socket timeout occurred whilst opening socket to %s on port %s.",
+                             self._sas_address, self._sas_port)
+        except Exception:
+            logger.exception("Unexpected exception")
+            raise
         else:
             # Send the Init message, bypassing the queue. Don't reconnect
             init = messages.Init(self._system_name, self._system_type, self._resource_identifier)
@@ -121,10 +126,17 @@ class MessageSender(threading.Thread):
         try:
             self._sas_sock.sendall(msg_array)
             return True
-        except Exception as e:
-            # TODO: Find out what these exceptions are
-            logger.error("Failed to send message. Error: $s\n$s", str(type(e)), str(e))
+        except IOError:
+            logger.exception("An I/O error occurred whilst sending message to %s on port %s.",
+                             self._sas_address, self._sas_port)
             return False
+        except socket.timeout:
+            logger.exception("Socket timeout occurred whilst sending message to %s on port %s.",
+                             self._sas_address, self._sas_port)
+            return False
+        except Exception:
+            logger.exception("Unexpected exception")
+            raise
 
     def reconnect(self):
         self._connected = False
