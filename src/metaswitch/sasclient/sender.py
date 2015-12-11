@@ -72,13 +72,13 @@ class MessageSender(threading.Thread):
                     message = self._queue.get(True, 1)
                 except Queue.Empty:
                     # No message for a second, send a heartbeat
-                    if not self.send_queued_message(messages.Heartbeat()):
+                    if not self.send_message(messages.Heartbeat()):
                         self._connected = False
                         break
 
             # Send the message
             if message is not None:
-                if self.send_queued_message(message):
+                if self.send_message(message):
                     self._queue.task_done()
                     message = None
                 else:
@@ -117,7 +117,7 @@ class MessageSender(threading.Thread):
         else:
             # Send the Init message, bypassing the queue. Don't reconnect
             init = messages.Init(self._system_name, self._system_type, self._resource_identifier)
-            if self.send_queued_message(init):
+            if self.send_message(init):
                 # Connection is successful. Reset the time to wait between reconnects.
                 self._reconnect_wait = MIN_RECONNECT_WAIT_TIME
                 self._connected = True
@@ -128,7 +128,7 @@ class MessageSender(threading.Thread):
         self._sas_sock.close()
         self._connected = False
 
-    def send_queued_message(self, message):
+    def send_message(self, message):
         """
         Sends a message on the socket
         :param message: Message to send
