@@ -138,7 +138,7 @@ class MessageSender(threading.Thread):
             return False
 
     def reconnect(self):
-        self._connected = False
+        self.disconnect()
 
         # If our connection is being rejected, don't spam the SAS with attempts. Use exponential
         # back-off.
@@ -146,5 +146,4 @@ class MessageSender(threading.Thread):
         self._reconnect_wait = min(reconnect_wait * 2, MAX_RECONNECT_WAIT_TIME)
         time.sleep(reconnect_wait)
 
-        self.disconnect()
         self.connect()
