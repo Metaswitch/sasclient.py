@@ -68,13 +68,12 @@ class MessageSender(threading.Thread):
             # send a heartbeat.
             try:
                 message = self._queue.get(True, 1)
+                self._queue.task_done()
             except Queue.Empty:
                 message = messages.Heartbeat()
 
             # Send the message.  If we fail, we'll want to reconnect.
-            if self.send_message(message):
-                self._queue.task_done()
-            else:
+            if not self.send_message(message):
                 self._connected = False
 
         self.disconnect()
