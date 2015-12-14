@@ -4,7 +4,7 @@
 import Queue
 import threading
 import logging
-from metaswitch.sasclient import sender, constants
+from metaswitch.sasclient import sender
 
 # The default SAS port, at the moment not configurable
 DEFAULT_SAS_PORT = 6761
@@ -19,8 +19,10 @@ class Client(object):
         Start the sasclient. This should only be called once since the latest call to stop().
         :param system_name: The system name.
         :param system_type: The system type, e.g. "ellis", "homer"
-        :param resource_identifier: Identifier of the resource bundle, e.g. org.projectclearwater.20151201
-        :param sas_address: The hostname or IP address of the SAS server to communicate with, (no port).
+        :param resource_identifier: Identifier of the resource bundle, e.g.
+                                    org.projectclearwater.20151201
+        :param sas_address: The hostname or IP address of the SAS server to communicate with, (no
+                            port).
         :param start: Whether the SAS client should start immediately
         """
         self._queue = Queue.Queue()
@@ -38,16 +40,22 @@ class Client(object):
     def start(self):
         """
         Spins up the thread to do the work, and connects to the SAS server.
-        :return:
         """
         logger.info("Starting SAS client")
-        if self._worker:
-            # We already had a worker. start must have been called twice consecutively. Try to recover.
+        if self._worker is not None:
+            # We already had a worker. start must have been called twice consecutively. Try to
+            # recover.
             self.stop()
 
         self._stopper = threading.Event()
-        self._worker = sender.MessageSender(self._stopper, self._queue, self._system_name, self._system_type,
-                                            self._resource_identifier, self._sas_address, DEFAULT_SAS_PORT)
+        self._worker = sender.MessageSender(
+            self._stopper,
+            self._queue,
+            self._system_name,
+            self._system_type,
+            self._resource_identifier,
+            self._sas_address,
+            DEFAULT_SAS_PORT)
         self._worker.setDaemon(True)
 
         # Make the initial connection.
@@ -58,10 +66,11 @@ class Client(object):
 
     def stop(self):
         """
-        Stop the worker thread, closing the connection, and remove references to thread-related objects. Queued messages
-        will be left on the queue until the queue is garbage collected, or the queue is reused and the messages are
-        sent.
-        The worker thread is a daemon, so it isn't usually necessary to call this, but it is preferred.
+        Stop the worker thread, closing the connection, and remove references to thread-related
+        objects. Queued messages will be left on the queue until the queue is garbage collected, or
+        the queue is reused and the messages are sent.
+        The worker thread is a daemon, so it isn't usually necessary to call this, but it is
+        preferred.
         """
         logger.info("Stopping SAS client")
         self._stopper.set()
@@ -82,10 +91,9 @@ class Trail(object):
     next_trail_lock = threading.Lock()
 
     def __init__(self):
-        Trail.next_trail_lock.acquire()
-        self._trail = Trail.next_trail
-        Trail.next_trail += 1
-        Trail.next_trail_lock.release()
+        with Trail.next_trail_lock:
+            self._trail = Trail.next_trail
+            Trail.next_trail += 1
 
     def get_trail_id(self):
         return self._trail

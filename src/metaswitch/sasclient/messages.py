@@ -4,7 +4,18 @@
 import struct
 import time
 import datetime
-from metaswitch.sasclient.constants import *
+from metaswitch.sasclient.constants import (
+    FLAG_ASSOCIATE,
+    FLAG_NO_REACTIVATE,
+    INTERFACE_VERSION,
+    MESSAGE_EVENT,
+    MESSAGE_HEARTBEAT,
+    MESSAGE_INITIALISATION,
+    MESSAGE_MARKER,
+    MESSAGE_STRINGS,
+    MESSAGE_TRAIL_ASSOCIATION,
+    PROTOCOL_VERSION,
+    SCOPE_NONE)
 
 # The base event ID for all events specified by resource bundles.
 RESOURCE_BUNDLE_BASE = 0x0F000000
@@ -12,8 +23,9 @@ RESOURCE_BUNDLE_BASE = 0x0F000000
 
 class Message(object):
     """
-    Message that can be sent to SAS. All messages are made of two parts, a header and a body, the format of which are
-    specified by the VPED protocol. Strings are encoded as length + data, denoted by "1+n".
+    Message that can be sent to SAS. All messages are made of two parts, a header and a body, the
+    format of which are specified by the VPED protocol. Strings are encoded as length + data,
+    denoted by "1+n".
 
     The header is of the form:
     2 bytes - length of message (including header)
@@ -29,7 +41,12 @@ class Message(object):
         self.msg_type = None
 
     def serialize_header(self, body_length):
-        return struct.pack('!hbbq', body_length + 12, INTERFACE_VERSION, self.msg_type, self.timestamp)
+        return struct.pack(
+            '!hbbq',
+            body_length + 12,
+            INTERFACE_VERSION,
+            self.msg_type,
+            self.timestamp)
 
     def serialize_body(self):
         """
@@ -46,8 +63,9 @@ class Message(object):
         return header + body
 
     def __str__(self):
-        return "SAS Message: {0} ({1})".format(MESSAGE_STRINGS.get(self.msg_type, "Unknown type"),
-                datetime.datetime.fromtimestamp(self.timestamp / 1000).strftime('%Y-%m-%d %H:%M:%S'))
+        return "SAS Message: {0} ({1})".format(
+            MESSAGE_STRINGS.get(self.msg_type, "Unknown type"),
+            datetime.datetime.fromtimestamp(self.timestamp / 1000).strftime('%Y-%m-%d %H:%M:%S'))
 
     def set_timestamp(self, timestamp):
         """
@@ -79,23 +97,23 @@ class Init(Message):
 
     def serialize_body(self):
         return ''.join([
-                pack_string(self.system_name),
-                struct.pack('=i', 1),
-                pack_string(PROTOCOL_VERSION),
-                pack_string(self.system_type),
-                pack_string(self.resource_identifier),
-                pack_string(self.resource_version)])
+            pack_string(self.system_name),
+            struct.pack('=i', 1),
+            pack_string(PROTOCOL_VERSION),
+            pack_string(self.system_type),
+            pack_string(self.resource_identifier),
+            pack_string(self.resource_version)])
 
     def __str__(self):
-        return ("{str}\n" +
+        return ("{string}\n" +
                 "   System name: {name}\n" +
-                "   System type: {type}\n" +
-                "   Resource identifier: {id}\n" +
+                "   System type: {sys_type}\n" +
+                "   Resource identifier: {res_id}\n" +
                 "   Resource version: {ver}").format(
-                    str=Message.__str__(self),
+                    string=Message.__str__(self),
                     name=self.system_name,
-                    type=self.system_type,
-                    id=self.resource_identifier,
+                    sys_type=self.system_type,
+                    res_id=self.resource_identifier,
                     ver=self.resource_version)
 
 
@@ -125,18 +143,14 @@ class TrailAssoc(Message):
         self.msg_type = TrailAssoc.msg_type
 
     def serialize_body(self):
-        return struct.pack(
-                '!qqb',
-                self.trail_a_id,
-                self.trail_b_id,
-                self.scope)
+        return struct.pack('!qqb', self.trail_a_id, self.trail_b_id, self.scope)
 
     def __str__(self):
-        return ("{str}\n" +
+        return ("{string}\n" +
                 "   Trail A: {trail_a:d}\n" +
                 "   Trail B: {trail_b:d}\n" +
                 "   Scope: {scope:d}").format(
-                    str=Message.__str__(self),
+                    string=Message.__str__(self),
                     trail_a=self.trail_a_id,
                     trail_b=self.trail_b_id,
                     scope=self.scope)
@@ -144,8 +158,8 @@ class TrailAssoc(Message):
 
 class DataMessage(Message):
     """
-    Message with included variable and static parameters. These consist of a header, the message-type-specific variables
-    (in a fixed order) - see implementations, and then:
+    Message with included variable and static parameters. These consist of a header, the
+    message-type-specific variables (in a fixed order) - see implementations, and then:
     2 bytes - length of static parameters
     4 bytes - static parameter 1
     4 bytes - static parameter 2
@@ -156,16 +170,21 @@ class DataMessage(Message):
     """
     def __init__(self, static_params, var_params):
         super(DataMessage, self).__init__()
-        self.static_params = static_params
-        self.var_params = var_params
+        self.static_params = static_params[:]
+        self.var_params = var_params[:]
 
     def serialize_params(self):
-        static_data = ''.join([struct.pack('=i', static_param) for static_param in self.static_params])
+        static_data = ''.join(
+            [struct.pack('=i', static_param) for static_param in self.static_params])
         static_data = struct.pack('!h', len(static_data)) + static_data
 
-        encoded_var_params = [var_param.encode('UTF-8') if isinstance(var_param, unicode) else str(var_param)
-                           for var_param in self.var_params]
-        var_data = ''.join([struct.pack('!h', len(var_param)) + str(var_param) for var_param in encoded_var_params])
+        encoded_var_params = [
+            var_param.encode('UTF-8')
+            if isinstance(var_param, unicode) else str(var_param)
+            for var_param in self.var_params]
+        var_data = ''.join([
+            struct.pack('!h', len(var_param)) + str(var_param)
+            for var_param in encoded_var_params])
 
         return static_data + var_data
 
@@ -191,10 +210,10 @@ class DataMessage(Message):
         return self
 
     def __str__(self):
-        return ("{str}\n" +
+        return ("{string}\n" +
                 "   Static parameters: {static_params}\n" +
                 "   Variable parameters: {var_params}").format(
-                    str=Message.__str__(self),
+                    string=Message.__str__(self),
                     static_params=",".join([str(param) for param in self.static_params]),
                     var_params="{amount} parameters".format(amount=len(self.var_params)))
 
@@ -204,16 +223,17 @@ class Event(DataMessage):
     Message used to indicate that something has happened.
     The body is of the form:
     8 bytes - trail ID
-    4 bytes - event ID - because we use interface version 3, we need to bitwise OR this with RESOURCE_BUNDLE_BASE
+    4 bytes - event ID - because we use interface version 3, we need to bitwise OR this with
+                         RESOURCE_BUNDLE_BASE
     4 bytes - instance ID (unique in codebase, to see from where this event was called)
     static and variable params (see above)
     """
     msg_type = MESSAGE_EVENT
 
     def __init__(self, trail, event_id, instance_id=0, static_params=None, var_params=None):
-        if not var_params:
+        if var_params is None:
             var_params = []
-        if not static_params:
+        if static_params is None:
             static_params = []
         super(Event, self).__init__(static_params, var_params)
         self.trail_id = trail.get_trail_id()
@@ -222,7 +242,10 @@ class Event(DataMessage):
         self.msg_type = Event.msg_type
 
     def serialize_body(self):
-        return struct.pack('!qii', self.trail_id, self.event_id | RESOURCE_BUNDLE_BASE, self.instance_id) + self.serialize_params()
+        return struct.pack(
+            '!qii', self.trail_id,
+            self.event_id | RESOURCE_BUNDLE_BASE,
+            self.instance_id) + self.serialize_params()
 
     def set_instance_id(self, instance_id):
         """
@@ -233,11 +256,11 @@ class Event(DataMessage):
         return self
 
     def __str__(self):
-        return ("{str}\n" +
+        return ("{string}\n" +
                 "   Trail: {trail:d}\n" +
                 "   Event ID: 0x{event:06x}\n" +
                 "   Instance ID: {instance:d}").format(
-                    str=DataMessage.__str__(self),
+                    string=DataMessage.__str__(self),
                     trail=self.trail_id,
                     event=self.event_id,
                     instance=self.instance_id)
@@ -250,16 +273,24 @@ class Marker(DataMessage):
     8 bytes - trail ID
     4 bytes - marker ID
     4 bytes - instance ID
-    1 byte - flags, where FLAG_ASSOCIATE should be set if scope is not SCOPE_NONE, and if this is the case
-             FLAG_NO_REACTIVATE may also be set
+    1 byte - flags, where FLAG_ASSOCIATE should be set if scope is not SCOPE_NONE, and if this is
+             the case FLAG_NO_REACTIVATE may also be set
     1 byte - scope
     """
     msg_type = MESSAGE_MARKER
 
-    def __init__(self, trail, marker_id, instance_id=0, reactivate=True, scope=SCOPE_NONE, static_params=None, var_params=None):
-        if not var_params:
+    def __init__(
+            self,
+            trail,
+            marker_id,
+            instance_id=0,
+            reactivate=True,
+            scope=SCOPE_NONE,
+            static_params=None,
+            var_params=None):
+        if var_params is None:
             var_params = []
-        if not static_params:
+        if static_params is None:
             static_params = []
         super(Marker, self).__init__(static_params, var_params)
         self.trail_id = trail.get_trail_id()
@@ -275,7 +306,13 @@ class Marker(DataMessage):
             flags |= FLAG_ASSOCIATE
             if not self.reactivate:
                 flags |= FLAG_NO_REACTIVATE
-        return struct.pack('!qiibb', self.trail_id, self.marker_id, self.instance_id, flags, self.scope) + self.serialize_params()
+        return struct.pack(
+            '!qiibb',
+            self.trail_id,
+            self.marker_id,
+            self.instance_id,
+            flags,
+            self.scope) + self.serialize_params()
 
     def set_association_scope(self, scope):
         """
@@ -302,13 +339,13 @@ class Marker(DataMessage):
         return self
 
     def __str__(self):
-        return ("{str}\n" +
+        return ("{string}\n" +
                 "   Trail: {trail:d}\n" +
                 "   Marker ID: 0x{marker:08x}\n" +
                 "   Instance ID: {instance:d}\n" +
                 "   Scope: {scope:d}\n" +
                 "   Reactivate: {react}").format(
-                    str=DataMessage.__str__(self),
+                    string=DataMessage.__str__(self),
                     trail=self.trail_id,
                     marker=self.marker_id,
                     instance=self.instance_id,
@@ -318,7 +355,8 @@ class Marker(DataMessage):
 
 class Heartbeat(Message):
     """
-    Message used to keep the connection alive. Consists of just the message header, without the timestamp.
+    Message used to keep the connection alive. Consists of just the message header, without the
+    timestamp.
     """
     msg_type = MESSAGE_HEARTBEAT
 
