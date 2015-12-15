@@ -1,7 +1,7 @@
 # sasclient
 Python SAS client library
 
-Usage:
+### Usage:
 
 ```python
 import metaswitch.sasclient as sasclient
@@ -33,7 +33,8 @@ sas.send(marker)
 sas.stop()
 ```
 
-Building:
+### Building and testing:
+
 make - display this readme
 make env - create the environment
 make test - run the unit tests
