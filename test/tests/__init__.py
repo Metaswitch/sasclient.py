@@ -1,1 +1,1 @@
-from test_sasclient_ import
+from test_sasclient_event import SASClientEventTest

@@ -11,12 +11,12 @@ help:
 	@cat README.md
 
 .PHONY: test
-test: bin/python setup.py
-	PYTHONPATH=src bash -c "bin/python test/run_tests.py ${JUSTTEST}"
+test: setup.py env
+	PYTHONPATH=src bash -c "${ENV_DIR}/bin/python test/run_tests.py ${JUSTTEST}"
 
 .PHONY: coverage
-coverage: bin/python setup.py
-	PYTHONPATH=src bash -c "bin/python bin/coverage run --source src test/run_tests.py"
+coverage: setup.py env
+	PYTHONPATH=src bash -c "${ENV_DIR}/bin/python ${ENV_DIR}/bin/coverage run --source src test/run_tests.py"
 	 bash -c "bin/python bin/coverage report -m"
 
 verify:

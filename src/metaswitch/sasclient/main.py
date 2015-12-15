@@ -41,12 +41,12 @@ class Client(object):
         """
         Spins up the thread to do the work, and connects to the SAS server.
         """
-        logger.info("Starting SAS client")
         if self._worker is not None:
             # We already had a worker. start must have been called twice consecutively. Try to
             # recover.
             self.stop()
 
+        logger.info("Starting SAS client")
         self._stopper = threading.Event()
         self._worker = sender.MessageSender(
             self._stopper,
