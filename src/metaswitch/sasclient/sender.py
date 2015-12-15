@@ -143,7 +143,7 @@ class MessageSender(threading.Thread):
         # back-off.
         reconnect_wait = self._reconnect_wait
         self._reconnect_wait = min(reconnect_wait * 2, MAX_RECONNECT_WAIT_TIME)
-        # Interruptable sleep
-        self._stopper.wait(self._reconnect_wait)
-
-        self.connect()
+        # Interruptible sleep. Returns False if it reaches the timeout, and True if it was
+        # interrupted.
+        if not self._stopper.wait(self._reconnect_wait):
+            self.connect()
