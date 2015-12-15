@@ -3,7 +3,6 @@
 
 import threading
 import socket
-import time
 import Queue
 import logging
 
@@ -75,6 +74,7 @@ class MessageSender(threading.Thread):
                 self._connected = False
 
         self.disconnect()
+        self._connected = False
 
     def connect(self):
         """
@@ -82,37 +82,34 @@ class MessageSender(threading.Thread):
         bypasses the queue.
         If this fails, immediately call reconnect()
         """
-        self._sas_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        # Connect. This is blocking indefinitely, but this is fine because without a connection
-        # there is nothing else to do. If this fails, then we'll notice when we try to send the
-        # heartbeat, which will prompt the reconnect.
+        # Connect. This has a long timeout, but this is fine because without a connection there is
+        # nothing else to do. If this fails, then we'll notice when we try to send the heartbeat,
+        # which will prompt the reconnect.
         try:
             logger.info("Connecting to: %s:%s", self._sas_address, self._sas_port)
-            self._sas_sock.create_connection((self._sas_address, self._sas_port), CONNECTION_TIMEOUT)
+            self._sas_sock = socket.create_connection((self._sas_address, self._sas_port),
+                                                      CONNECTION_TIMEOUT)
         except IOError:
             logger.exception(
                 "An I/O error occurred whilst opening socket to %s on port %s",
                 self._sas_address,
                 self._sas_port)
-        except (socket.herror, socket.gaierror):
-            logger.exception(
-                "An address error occurred whilst opening socket to %s on port %s",
-                self._sas_address,
-                self._sas_port)
         else:
-            # Send the Init message, bypassing the queue. Don't reconnect
+            # Send the Init message, bypassing the queue.
             init = messages.Init(self._system_name, self._system_type, self._resource_identifier)
             if self.send_message(init):
                 # Connection is successful. Reset the time to wait between reconnects.
+                logger.debug("Successfully connected")
                 self._reconnect_wait = MIN_RECONNECT_WAIT_TIME
                 self._connected = True
 
     def disconnect(self):
         logger.info("Disconnecting")
+        # It's possible that the socket doesn't even exist yet, so we have nothing to do.
+        if self._sas_sock is None:
+            return
         self._sas_sock.shutdown(socket.SHUT_RDWR)
         self._sas_sock.close()
-        self._connected = False
 
     def send_message(self, message):
         """
@@ -147,6 +144,6 @@ class MessageSender(threading.Thread):
         reconnect_wait = self._reconnect_wait
         self._reconnect_wait = min(reconnect_wait * 2, MAX_RECONNECT_WAIT_TIME)
         # Interruptable sleep
-        self._stopper.wait()
+        self._stopper.wait(self._reconnect_wait)
 
         self.connect()
