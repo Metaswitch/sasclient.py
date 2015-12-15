@@ -1,1 +1,5 @@
 from test_sasclient_event import SASClientEventTest
+from test_sasclient_heartbeat import SASClientHeartbeatTest
+from test_sasclient_init_message import SASClientInitMessageTest
+from test_sasclient_marker import SASClientMarkerTest
+from test_sasclient_trail_assoc import SASClientTrailAssocTest

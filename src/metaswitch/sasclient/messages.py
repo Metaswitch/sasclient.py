@@ -277,7 +277,7 @@ class Marker(DataMessage):
     4 bytes - instance ID
     1 byte - flags, where FLAG_ASSOCIATE should be set if scope is not SCOPE_NONE, and if this is
              the case FLAG_NO_REACTIVATE may also be set
-    1 byte - scope
+    1 byte - scope, either SCOPE_NONE, SCOPE_BRANCH or SCOPE_TRACE
     """
     msg_type = MESSAGE_MARKER
 

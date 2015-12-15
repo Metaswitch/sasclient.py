@@ -11,6 +11,10 @@ EVENT_STRING_ALL = '\x00L\x03\x03\x00\x00\x01Q\xa5\x81Jv\x00\x00\x00\x00\x00\x00
 
 
 class SASClientEventTest(SASClientTestCase):
+    """
+    Test the serialisation of Events. We test against recorded byte strings that we know to be
+    correct.
+    """
     def test_empty(self):
         event = Event(Trail(), 222).set_timestamp(TIMESTAMP)
         assert event.serialize() == EVENT_STRING_EMPTY
