@@ -82,7 +82,7 @@ class Client(object):
         self._stopper = None
 
     def send(self, message):
-        logger.info("Queueing message for sending:\n%s", str(message))
+        logger.debug("Queueing message for sending:\n%s", str(message))
         self._queue.put(message)
 
 

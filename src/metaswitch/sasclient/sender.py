@@ -46,8 +46,6 @@ class MessageSender(threading.Thread):
         self._sas_port = sas_port
         self._sas_sock = None
         self._reconnect_wait = MIN_RECONNECT_WAIT_TIME
-        # Connecting shouldn't take more than 10 seconds.
-        socket.setdefaulttimeout(CONNECTION_TIMEOUT)
         self._connected = False
 
     def run(self):
@@ -91,7 +89,7 @@ class MessageSender(threading.Thread):
         # heartbeat, which will prompt the reconnect.
         try:
             logger.info("Connecting to: %s:%s", self._sas_address, self._sas_port)
-            self._sas_sock.connect((self._sas_address, self._sas_port))
+            self._sas_sock.create_connection((self._sas_address, self._sas_port), CONNECTION_TIMEOUT)
         except IOError:
             logger.exception(
                 "An I/O error occurred whilst opening socket to %s on port %s",
@@ -148,6 +146,7 @@ class MessageSender(threading.Thread):
         # back-off.
         reconnect_wait = self._reconnect_wait
         self._reconnect_wait = min(reconnect_wait * 2, MAX_RECONNECT_WAIT_TIME)
-        time.sleep(reconnect_wait)
+        # Interruptable sleep
+        self._stopper.wait()
 
         self.connect()
