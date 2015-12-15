@@ -5,5 +5,5 @@ setup(
     version='0.1',
     packages=find_packages('src'),
     package_dir={'':'src'},
-    install_requires=[],
+    install_requires=['coverage>=4.0'],
     )

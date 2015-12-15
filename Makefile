@@ -17,7 +17,7 @@ test: setup.py env
 .PHONY: coverage
 coverage: setup.py env
 	PYTHONPATH=src bash -c "${ENV_DIR}/bin/python ${ENV_DIR}/bin/coverage run --source src test/run_tests.py"
-	 bash -c "bin/python bin/coverage report -m"
+	 bash -c "${ENV_DIR}/bin/python ${ENV_DIR}/bin/coverage report -m"
 
 verify:
 	flake8 --select=E10,E11,E9,F src/
