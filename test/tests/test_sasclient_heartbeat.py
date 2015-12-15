@@ -1,7 +1,7 @@
 from metaswitch.sasclient.messages import Heartbeat
 from test_sasclient import SASClientTestCase
 
-HEARTBEAT_STRING = ''
+HEARTBEAT_STRING = '\x00\x04\x03\x05'
 
 
 class SASClientHeartbeatTest(SASClientTestCase):

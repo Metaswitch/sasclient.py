@@ -2,8 +2,8 @@ from metaswitch.sasclient.messages import Init
 from test_sasclient import SASClientTestCase
 
 TIMESTAMP = 1450180692598
-INIT_STRING_EMPTY = ''
-INIT_STRING_NONEMPTY = ''
+INIT_STRING_EMPTY = '\x00\x19\x03\x01\x00\x00\x01Q\xa5\x81Jv\x00\x01\x00\x00\x00\x04v0.1\x00\x00\x00'
+INIT_STRING_NONEMPTY = '\x00U\x03\x01\x00\x00\x01Q\xa5\x81Jv\x16ellis@ellis.cw-ngv.com\x01\x00\x00\x00\x04v0.1\x05ellis\x1eorg.projectclearwater.20151201\x031.1'
 
 
 class SASClientInitMessageTest(SASClientTestCase):
