@@ -70,8 +70,10 @@ class Message(object):
     def set_timestamp(self, timestamp):
         """
         Set the timestamp in milliseconds.
+        :return: self, for fluent API
         """
         self.timestamp = timestamp
+        return self
 
 
 class Init(Message):
