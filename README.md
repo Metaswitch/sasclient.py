@@ -35,8 +35,8 @@ sas.stop()
 
 ### Building and testing:
 
-make - display this readme
-make env - create the environment
-make test - run the unit tests
-make coverage - run the unit tests with coverage
+make - display this readme  
+make env - create the environment  
+make test - run the unit tests  
+make coverage - run the unit tests with coverage  
 
