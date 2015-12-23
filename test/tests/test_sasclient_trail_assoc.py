@@ -28,3 +28,5 @@ class SASClientTrailAssocTest(SASClientTestCase):
     def test_scope_trace(self):
         assoc = TrailAssoc(Trail(), Trail(), SCOPE_TRACE).set_timestamp(TIMESTAMP)
         assert assoc.serialize() == ASSOC_STRING_SCOPE_TRACE
+        # Now just check that __str__ doesn't throw
+        assert len(str(assoc)) > 0

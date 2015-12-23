@@ -38,16 +38,25 @@ class SASClientEventTest(SASClientTestCase):
         event = Event(Trail(), 222).set_timestamp(TIMESTAMP)
         event.add_variable_params(["test parameter", "other test parameter"])
         assert event.serialize() == EVENT_STRING_TWO_VAR
+        # Now just check that __str__ doesn't throw
+        assert len(str(event)) > 0
+
+    def test_params_no_list(self):
+        event = Event(Trail(), 222).set_timestamp(TIMESTAMP)
+        with self.assertRaises(TypeError):
+            event.add_static_params(333)
+        with self.assertRaises(TypeError):
+            event.add_variable_params("test parameter")
 
     def test_ordering(self):
         trail = Trail()
         event_static_first = Event(trail, 222).set_timestamp(TIMESTAMP)
         event_static_first.add_static_params([333, 444])
         event_static_first.add_variable_params(["test parameter", "other test parameter"])
-        event_static_first.instance_id = 555
+        event_static_first.set_instance_id(555)
         event_variable_first = Event(trail, 222).set_timestamp(TIMESTAMP)
         event_variable_first.add_variable_params(["test parameter", "other test parameter"])
-        event_variable_first.instance_id = 555
+        event_variable_first.set_instance_id(555)
         event_variable_first.add_static_params([333, 444]).set_timestamp(TIMESTAMP)
         assert event_static_first.serialize() == event_variable_first.serialize()
         assert event_static_first.serialize() == EVENT_STRING_ALL
@@ -61,11 +70,11 @@ class SASClientEventTest(SASClientTestCase):
             [333, 444],
             ["test parameter", "other test parameter"]).set_timestamp(TIMESTAMP)
         event_plurals = Event(trail, 222).set_timestamp(TIMESTAMP)
-        event_plurals.instance_id = 555
+        event_plurals.set_instance_id(555)
         event_plurals.add_static_params([333,444])
         event_plurals.add_variable_params(["test parameter", "other test parameter"])
         event_singles = Event(trail, 222).set_timestamp(TIMESTAMP)
-        event_singles.instance_id = 555
+        event_singles.set_instance_id(555)
         event_singles.add_static_param(333).add_static_param(444)
         event_singles.add_variable_param("test parameter").add_variable_param("other test parameter")
         assert event_constructor.serialize() == event_plurals.serialize()

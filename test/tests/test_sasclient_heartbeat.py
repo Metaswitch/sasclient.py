@@ -12,3 +12,5 @@ class SASClientHeartbeatTest(SASClientTestCase):
     def test_heartbeat(self):
         heartbeat = Heartbeat()
         assert heartbeat.serialize() == HEARTBEAT_STRING
+        # Now just check that __str__ doesn't throw
+        assert len(str(heartbeat)) > 0
