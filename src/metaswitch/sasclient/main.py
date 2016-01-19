@@ -16,13 +16,12 @@ class Client(object):
     def __init__(self, system_name, system_type, resource_identifier, sas_address, start=True):
         """
         Constructs the client and the message queue.
-        Start the sasclient. This should only be called once since the latest call to stop().
-        :param system_name: The system name.
+        :param system_name: The system name
         :param system_type: The system type, e.g. "ellis", "homer"
         :param resource_identifier: Identifier of the resource bundle, e.g.
                                     org.projectclearwater.20151201
         :param sas_address: The hostname or IP address of the SAS server to communicate with, (no
-                            port).
+                            port)
         :param start: Whether the SAS client should start immediately
         """
         self._queue = Queue.Queue()
@@ -39,6 +38,7 @@ class Client(object):
 
     def start(self):
         """
+        Start the sasclient. This should only be called once since the latest call to stop().
         Spins up the thread to do the work, and connects to the SAS server.
         """
         if self._worker is not None:
@@ -100,6 +100,9 @@ class Trail(object):
 
 
 class TestClient(object):
+    """
+    Fake implementation of the Client, to be used by the user in unit tests.
+    """
     def __init__(self):
         self.message_queue = []
 

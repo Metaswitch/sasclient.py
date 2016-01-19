@@ -71,12 +71,13 @@ class SASClientEventTest(SASClientTestCase):
             ["test parameter", "other test parameter"]).set_timestamp(TIMESTAMP)
         event_plurals = Event(trail, 222).set_timestamp(TIMESTAMP)
         event_plurals.set_instance_id(555)
-        event_plurals.add_static_params([333,444])
+        event_plurals.add_static_params([333, 444])
         event_plurals.add_variable_params(["test parameter", "other test parameter"])
         event_singles = Event(trail, 222).set_timestamp(TIMESTAMP)
         event_singles.set_instance_id(555)
         event_singles.add_static_param(333).add_static_param(444)
-        event_singles.add_variable_param("test parameter").add_variable_param("other test parameter")
+        event_singles.add_variable_param("test parameter")\
+            .add_variable_param("other test parameter")
         assert event_constructor.serialize() == event_plurals.serialize()
         assert event_constructor.serialize() == event_singles.serialize()
         assert event_constructor.serialize() == EVENT_STRING_ALL

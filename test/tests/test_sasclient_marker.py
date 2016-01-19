@@ -81,12 +81,13 @@ class SASClientMarkerTest(SASClientTestCase):
             ["test parameter", "other test parameter"]).set_timestamp(TIMESTAMP)
         marker_plurals = Marker(trail, 222).set_timestamp(TIMESTAMP)
         marker_plurals.set_instance_id(555)
-        marker_plurals.add_static_params([333,444])
+        marker_plurals.add_static_params([333, 444])
         marker_plurals.add_variable_params(["test parameter", "other test parameter"])
         marker_singles = Marker(trail, 222).set_timestamp(TIMESTAMP)
         marker_singles.set_instance_id(555)
         marker_singles.add_static_param(333).add_static_param(444)
-        marker_singles.add_variable_param("test parameter").add_variable_param("other test parameter")
+        marker_singles.add_variable_param("test parameter")\
+            .add_variable_param("other test parameter")
         assert marker_constructor.serialize() == marker_plurals.serialize()
         assert marker_constructor.serialize() == marker_singles.serialize()
         assert marker_constructor.serialize() == MARKER_STRING_ALL

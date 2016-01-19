@@ -54,7 +54,6 @@ class MessageSender(threading.Thread):
         If the queue has been terminated (via _stopper), then stop.
         Maintains the connection - if the connection is down then reconnect using connect()
         """
-        message = None
         while not self._stopper.is_set():
             if not self._connected:
                 # Try to reconnect and have another go at the loop.
@@ -71,6 +70,7 @@ class MessageSender(threading.Thread):
 
             # Send the message.  If we fail, we'll want to reconnect.
             if not self.send_message(message):
+                logger.debug("Failed to send a message, flag that we need to reconnect")
                 self._connected = False
 
         self.disconnect()
@@ -123,6 +123,7 @@ class MessageSender(threading.Thread):
         msg_array = message.serialize()
         try:
             self._sas_sock.sendall(msg_array)
+            logger.debug("Successfully sent message")
             return True
         except IOError:
             logger.exception("An I/O error occurred whilst sending message to %s on port %s.",
@@ -132,11 +133,9 @@ class MessageSender(threading.Thread):
             logger.exception("Socket timeout occurred whilst sending message to %s on port %s.",
                              self._sas_address, self._sas_port)
             return False
-        except Exception:
-            logger.exception("Unexpected exception")
-            raise
 
     def reconnect(self):
+        logger.debug("Attempting to reconnect.")
         self.disconnect()
 
         # If our connection is being rejected, don't spam the SAS with attempts. Use exponential
@@ -146,5 +145,5 @@ class MessageSender(threading.Thread):
 
         # Interruptible sleep. Returns False if it reaches the timeout, and True if it was
         # interrupted.
-        if not self._stopper.wait(self._reconnect_wait):
+        if not self._stopper.wait(reconnect_wait):
             self.connect()
