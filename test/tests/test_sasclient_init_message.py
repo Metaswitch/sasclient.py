@@ -13,11 +13,11 @@ class SASClientInitMessageTest(SASClientTestCase):
     """
     def test_empty_strings(self):
         init = Init('', '', '').set_timestamp(TIMESTAMP)
-        assert init.serialize() == INIT_STRING_EMPTY
+        self.assertEqual(init.serialize(), INIT_STRING_EMPTY)
 
     def test_nonempty_strings(self):
         init = Init("ellis@ellis.cw-ngv.com", "ellis", "org.projectclearwater.20151201", '1.1')
         init.set_timestamp(TIMESTAMP)
-        assert init.serialize() == INIT_STRING_NONEMPTY
+        self.assertEqual(init.serialize(), INIT_STRING_NONEMPTY)
         # Now just check that __str__ doesn't throw
-        assert len(str(init)) > 0
+        self.assertGreater(len(str(init)), 0)
