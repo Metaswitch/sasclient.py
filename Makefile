@@ -20,13 +20,13 @@ coverage: setup.py env
 	 bash -c "${ENV_DIR}/bin/python ${ENV_DIR}/bin/coverage report -m"
 
 verify:
-	flake8 --select=E10,E11,E9,F src/
+	flake8 --select=E10,E11,E9,F src test
 
 style:
-	flake8 --select=E,W,C,N --max-line-length=100 src/
+	flake8 --select=E,W,C,N --max-line-length=100 src test
 
 explain-style:
-	flake8 --select=E,W,C,N --show-pep8 --first --max-line-length=100 src/
+	flake8 --select=E,W,C,N --show-pep8 --first --max-line-length=100 src test
 
 .PHONY: env
 env: $(ENV_DIR)/.eggs_installed
