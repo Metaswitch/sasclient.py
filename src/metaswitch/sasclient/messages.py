@@ -12,6 +12,7 @@ from metaswitch.sasclient.constants import (
     MESSAGE_HEARTBEAT,
     MESSAGE_INITIALISATION,
     MESSAGE_MARKER,
+    MESSAGE_ANALYTICS,
     MESSAGE_STRINGS,
     MESSAGE_TRAIL_ASSOCIATION,
     PROTOCOL_VERSION,
@@ -244,10 +245,14 @@ class Event(DataMessage):
         self.msg_type = Event.msg_type
 
     def serialize_body(self):
+        return self.serialize_event_headers() + self.serialize_params()
+
+    def serialize_event_headers(self):
+        """Serialise the headers that are specific to Events"""
         return struct.pack(
             '!qii', self.trail_id,
             self.event_id | RESOURCE_BUNDLE_BASE,
-            self.instance_id) + self.serialize_params()
+            self.instance_id)
 
     def set_instance_id(self, instance_id):
         """
@@ -353,6 +358,84 @@ class Marker(DataMessage):
                     instance=self.instance_id,
                     scope=self.scope,
                     react=("True" if self.reactivate else "False"))
+
+
+class Analytics(Event):
+    """
+    Message that should be forwarded to an analytics server.
+    The body is of the form:
+    8 bytes - trail ID
+    4 bytes - marker ID
+    4 bytes - instance ID
+    1 byte      - format type, this should be one of FORMAT_JSON or FORMAT_XML
+    2 + n bytes - source type (+ length)
+    2 + n bytes - friendly id (+ length)
+    static and variable params (as for Event)
+    """
+
+    # Format types, this specifies how SAS should format the message before
+    # forwarding it to an analytics server.
+    FORMAT_JSON = 1
+    FORMAT_XML = 2
+
+    msg_type = MESSAGE_ANALYTICS
+
+    def __init__(self,
+                 trail,
+                 format_type,
+                 source_type,
+                 friendly_id,
+                 store_event=False,
+                 event_id=0,
+                 inst_id=0,
+                 static_params=[],
+                 var_params=[]):
+
+        super(Analytics, self).__init__(trail,
+                                        event_id,
+                                        inst_id,
+                                        static_params,
+                                        var_params)
+        self.trail = trail
+        self.format_type = format_type
+        self.source_type = source_type
+        self.friendly_id = friendly_id
+        self.store_event = store_event
+        self.msg_type = Analytics.msg_type
+
+    def serialize_event_headers(self):
+        # The initial headers are the same as for Events so call into the
+        # superclass method.
+        analytics_headers = super(Analytics, self).serialize_event_headers()
+
+        # Now add Analytics specific headers
+        analytics_headers += struct.pack('!bb',
+                                         self.format_type, self.store_event)
+        analytics_headers += struct.pack('!h', len(self.source_type)) + str(self.source_type)
+        analytics_headers += struct.pack('!h', len(self.friendly_id)) + str(self.friendly_id)
+        return analytics_headers
+
+    def get_format_type(self):
+        format_str = "Unknown"
+
+        if self.format_type == Analytics.FORMAT_JSON:
+            format_str = "JSON"
+        elif self.format_type == Analytics.FORMAT_XML:
+            format_str = "XML"
+
+        return format_str
+
+    def __str__(self):
+        return ("{string}\n" +
+                "   Format Type: {format_type}\n" +
+                "   Store Msg  : {store}\n"
+                "   Source Type: {source_type}\n" +
+                "   Friendly ID: {friendly_id}\n").format(
+                    string=Event.__str__(self),
+                    format_type=self.get_format_type(),
+                    store=self.store_event,
+                    source_type=self.source_type,
+                    friendly_id=self.friendly_id)
 
 
 class Heartbeat(Message):
