@@ -4,7 +4,7 @@
 import logging
 
 from metaswitch.sasclient.main import Client, Trail, TestClient
-from metaswitch.sasclient.messages import Event, TrailAssoc, Marker
+from metaswitch.sasclient.messages import Event, TrailAssoc, Marker, Analytics
 from metaswitch.sasclient.constants import *
 
 logger = logging.getLogger(__name__)
