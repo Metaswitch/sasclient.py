@@ -5,6 +5,7 @@ import threading
 import socket
 import Queue
 import logging
+import traceback
 
 from metaswitch.sasclient import messages
 
@@ -54,27 +55,36 @@ class MessageSender(threading.Thread):
         If the queue has been terminated (via _stopper), then stop.
         Maintains the connection - if the connection is down then reconnect using connect()
         """
-        while not self._stopper.is_set():
-            if not self._connected:
-                # Try to reconnect and have another go at the loop.
-                self.reconnect()
-                continue
+        try:
+            while not self._stopper.is_set():
+                if not self._connected:
+                    # Try to reconnect and have another go at the loop.
+                    self.reconnect()
+                    continue
 
-            # Try to get a message off of the queue.  If there's nothing there after a second,
-            # send a heartbeat.
-            try:
-                message = self._queue.get(True, 1)
-                self._queue.task_done()
-            except Queue.Empty:
-                message = messages.Heartbeat()
+                # Try to get a message off of the queue.  If there's nothing there after a second,
+                # send a heartbeat.
+                try:
+                    message = self._queue.get(True, 1)
+                    self._queue.task_done()
+                except Queue.Empty:
+                    message = messages.Heartbeat()
 
-            # Send the message.  If we fail, we'll want to reconnect.
-            if not self.send_message(message):
-                logger.debug("Failed to send a message, flag that we need to reconnect")
-                self._connected = False
+                # Send the message.  If we fail, we'll want to reconnect.
+                if not self.send_message(message):
+                    logger.debug("Failed to send a message, flag that we need to reconnect")
+                    self._connected = False
 
-        self.disconnect()
-        self._connected = False
+            self.disconnect()
+            self._connected = False
+
+        except Exception as e:
+            details = traceback.format_exc()
+            error = ("ERROR - Hit exception in SAS sender thread!  SAS logs will no longer be "
+                    "made.\n{}".format(details))
+            print(error)
+            logger.error(error)
+            raise e
 
     def connect(self):
         """
@@ -117,13 +127,18 @@ class MessageSender(threading.Thread):
         :param message: Message to send
         :return: boolean success
         """
-        if not isinstance(message, messages.Heartbeat):
+        heartbeat = isinstance(message, messages.Heartbeat)
+
+        if not heartbeat:
             logger.debug("Sending message:\n%s", str(message))
 
         msg_array = message.serialize()
         try:
             self._sas_sock.sendall(msg_array)
-            logger.debug("Successfully sent message")
+
+            if not heartbeat:
+                logger.debug("Successfully sent message")
+
             return True
         except IOError:
             logger.exception("An I/O error occurred whilst sending message to %s on port %s.",
