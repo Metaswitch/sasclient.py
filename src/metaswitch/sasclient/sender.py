@@ -79,6 +79,9 @@ class MessageSender(threading.Thread):
             self._connected = False
 
         except Exception as e:
+            # Ensure that we record any unexpected exceptions in the logs.  We also print out
+            # the error, in order to still produce diagnosable output when we're hitting
+            # exceptions in the logging library.
             details = traceback.format_exc()
             error = ("ERROR - Hit exception in SAS sender thread!  SAS logs will no longer be "
                     "made.\n{}".format(details))
