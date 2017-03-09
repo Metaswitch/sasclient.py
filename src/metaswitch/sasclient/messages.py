@@ -388,8 +388,8 @@ class Analytics(Event):
                  store_event=False,
                  event_id=0,
                  inst_id=0,
-                 static_params=[],
-                 var_params=[]):
+                 static_params=None,
+                 var_params=None):
 
         super(Analytics, self).__init__(trail,
                                         event_id,
