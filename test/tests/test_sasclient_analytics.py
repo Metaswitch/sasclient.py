@@ -93,4 +93,3 @@ class SASClientAnalyticsTest(SASClientTestCase):
             '   Friendly ID: TestFriendlyID\n'
         )
         self.assertEqual(str(message), expected_string)
-

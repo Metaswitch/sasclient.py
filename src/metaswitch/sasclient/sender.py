@@ -83,8 +83,9 @@ class MessageSender(threading.Thread):
             # the error, in order to still produce diagnosable output when we're hitting
             # exceptions in the logging library.
             details = traceback.format_exc()
-            error = ("ERROR - Hit exception in SAS sender thread!  SAS logs will no longer be "
-                    "made.\n{}".format(details))
+            error = (
+                "ERROR - Hit exception in SAS sender thread!  SAS logs will no longer be made.\n{}"
+            ).format(details)
             print(error)
             logger.error(error)
             raise e
