@@ -32,9 +32,8 @@ explain-style:
 env: $(ENV_DIR)/.eggs_installed
 
 $(ENV_DIR)/bin/python:
-	virtualenv --setuptools --python=$(PYTHON_BIN) $(ENV_DIR)
+	virtualenv --python=$(PYTHON_BIN) $(ENV_DIR)
 	$(ENV_DIR)/bin/pip install --upgrade "setuptools>0.7"
-	$(ENV_DIR)/bin/easy_install distribute
 
 $(ENV_DIR)/bin/coverage: $(ENV_DIR)/bin/python
 	$(ENV_DIR)/bin/pip install coverage
