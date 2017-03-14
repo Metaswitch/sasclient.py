@@ -32,9 +32,8 @@ explain-style:
 env: $(ENV_DIR)/.eggs_installed
 
 $(ENV_DIR)/bin/python:
-	virtualenv --setuptools --python=$(PYTHON_BIN) $(ENV_DIR)
-	$(ENV_DIR)/bin/easy_install -U "setuptools>0.7"
-	$(ENV_DIR)/bin/easy_install distribute
+	virtualenv --python=$(PYTHON_BIN) $(ENV_DIR)
+	$(ENV_DIR)/bin/pip install --upgrade "setuptools>0.7"
 
 $(ENV_DIR)/bin/coverage: $(ENV_DIR)/bin/python
 	$(ENV_DIR)/bin/pip install coverage
@@ -45,13 +44,13 @@ build_sasclient_egg: $(ENV_DIR)/bin/python setup.py
 
 $(ENV_DIR)/.eggs_installed: $(ENV_DIR)/bin/python setup.py $(shell find src -type f -not -name "*.pyc")
 	$(ENV_DIR)/bin/python setup.py bdist_egg -d .eggs
-	
+
 	# Download the egg files they depend upon
 	${ENV_DIR}/bin/easy_install -zmaxd .eggs/ .eggs/*.egg
-	
+
 	# Install the downloaded egg files
 	${ENV_DIR}/bin/easy_install --allow-hosts=None -f .eggs/ .eggs/*.egg
-	
+
 	# Touch the sentinel file
 	touch $@
 
