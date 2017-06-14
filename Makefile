@@ -15,9 +15,12 @@ test: setup.py env
 	PYTHONPATH=src bash -c "${ENV_DIR}/bin/python test/run_tests.py ${JUSTTEST}"
 
 .PHONY: coverage
-coverage: setup.py env
+coverage: $(ENV_DIR)/bin/coverage setup.py env
+	rm -rf htmlcov/
+	$(ENV_DIR)/bin/coverage erase
 	PYTHONPATH=src bash -c "${ENV_DIR}/bin/python ${ENV_DIR}/bin/coverage run --source src test/run_tests.py"
 	 bash -c "${ENV_DIR}/bin/python ${ENV_DIR}/bin/coverage report -m"
+	$(ENV_DIR)/bin/coverage html
 
 verify:
 	flake8 --select=E10,E11,E9,F src test
