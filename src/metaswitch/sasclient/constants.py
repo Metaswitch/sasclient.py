@@ -63,4 +63,7 @@ MARKER_ID_INBOUND_CALLING_URI = 0x05000004
 MARKER_ID_OUTBOUND_CALLED_URI = 0x05000005
 MARKER_ID_INBOUND_CALLED_URI = 0x05000006
 
+# Compression constants
+COMPRESS_ZLIB = "zlib"
+
 # For event IDs and usage, see your resource bundle

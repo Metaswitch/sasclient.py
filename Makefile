@@ -19,7 +19,7 @@ coverage: $(ENV_DIR)/bin/coverage setup.py env
 	rm -rf htmlcov/
 	$(ENV_DIR)/bin/coverage erase
 	PYTHONPATH=src bash -c "${ENV_DIR}/bin/python ${ENV_DIR}/bin/coverage run --source src test/run_tests.py"
-	 bash -c "${ENV_DIR}/bin/python ${ENV_DIR}/bin/coverage report -m"
+	bash -c "${ENV_DIR}/bin/python ${ENV_DIR}/bin/coverage report -m --fail-under=100 --omit=*main.py,*sender.py"
 	$(ENV_DIR)/bin/coverage html
 
 verify:

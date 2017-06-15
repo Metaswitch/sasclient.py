@@ -4,6 +4,7 @@
 import struct
 import time
 import datetime
+import zlib
 from metaswitch.sasclient.constants import (
     FLAG_ASSOCIATE,
     FLAG_NO_REACTIVATE,
@@ -16,7 +17,8 @@ from metaswitch.sasclient.constants import (
     MESSAGE_STRINGS,
     MESSAGE_TRAIL_ASSOCIATION,
     PROTOCOL_VERSION,
-    SCOPE_NONE)
+    SCOPE_NONE,
+    COMPRESS_ZLIB)
 
 # The base event ID for all events specified by resource bundles.
 RESOURCE_BUNDLE_BASE = 0x0F000000
@@ -174,20 +176,17 @@ class DataMessage(Message):
     def __init__(self, static_params, var_params):
         super(DataMessage, self).__init__()
         self.static_params = static_params[:]
-        self.var_params = var_params[:]
+        self.var_params = []
+        self.add_variable_params(var_params)
 
     def serialize_params(self):
         static_data = ''.join(
             [struct.pack('=i', static_param) for static_param in self.static_params])
         static_data = struct.pack('!h', len(static_data)) + static_data
 
-        encoded_var_params = [
-            var_param.encode('UTF-8')
-            if isinstance(var_param, unicode) else str(var_param)
-            for var_param in self.var_params]
         var_data = ''.join([
-            struct.pack('!h', len(var_param)) + str(var_param)
-            for var_param in encoded_var_params])
+            struct.pack('!h', len(var_param)) + var_param
+            for var_param in self.var_params])
 
         return static_data + var_data
 
@@ -202,14 +201,23 @@ class DataMessage(Message):
         self.static_params.append(static_param)
         return self
 
-    def add_variable_params(self, var_params):
+    def add_variable_params(self, var_params, compress=None):
         if not isinstance(var_params, list):
             raise TypeError("Expecting a list")
-        self.var_params += var_params
+        [self.add_variable_param(p, compress) for p in var_params]
         return self
 
-    def add_variable_param(self, var_param):
-        self.var_params.append(var_param)
+    def add_variable_param(self, var_param, compress=None):
+        enc_value = var_param.encode('UTF-8') if isinstance(var_param, unicode) else str(var_param)
+
+        if compress == COMPRESS_ZLIB:
+            # Compress with zlib
+            enc_value = zlib.compress(enc_value)
+        elif compress is not None:
+            # Unrecognised compression type
+            raise ValueError("Unrecognised compression type: {}".format(compress))
+
+        self.var_params.append(enc_value)
         return self
 
     def __str__(self):

@@ -1,4 +1,4 @@
-from metaswitch.sasclient import Event, Trail
+from metaswitch.sasclient import Event, Trail, COMPRESS_ZLIB
 from test_sasclient import SASClientTestCase
 
 TIMESTAMP = 1450180692598
@@ -21,6 +21,10 @@ EVENT_STRING_ONE_VAR = (
 EVENT_STRING_TWO_VAR = (
     '\x00D\x03\x03\x00\x00\x01Q\xa5\x81Jv\x00\x00\x00\x00\x00\x00\x00o\x0f\x00\x00\xde\x00\x00\x00'
     '\x00\x00\x00\x00\x0etest parameter\x00\x14other test parameter'
+)
+EVENT_STRING_COMPRESSED_VAR = (
+    '\x006\x03\x03\x00\x00\x01Q\xa5\x81Jv\x00\x00\x00\x00\x00\x00\x00o\x0f\x00\x00\xde\x00\x00\x00'
+    '\x00\x00\x00\x00\x16x\x9c+I-.Q(H,J\xccM-I-\x02\x00)\xd0\x05\xa2'
 )
 EVENT_STRING_ALL = (
     '\x00L\x03\x03\x00\x00\x01Q\xa5\x81Jv\x00\x00\x00\x00\x00\x00\x00o\x0f\x00\x00\xde\x00\x00\x02'
@@ -58,6 +62,16 @@ class SASClientEventTest(SASClientTestCase):
         self.assertEqual(event.serialize(), EVENT_STRING_TWO_VAR)
         # Now just check that __str__ doesn't throw
         self.assertGreater(len(str(event)), 0)
+
+    def test_compressed_variable_param(self):
+        event = Event(Trail(), 222).set_timestamp(TIMESTAMP)
+        event.add_variable_param("test parameter", compress=COMPRESS_ZLIB)
+        self.assertEqual(event.serialize(), EVENT_STRING_COMPRESSED_VAR)
+
+    def test_unknown_compression(self):
+        event = Event(Trail(), 222).set_timestamp(TIMESTAMP)
+        with self.assertRaises(ValueError):
+            event.add_variable_param("test parameter", compress='bogus_compression')
 
     def test_params_no_list(self):
         event = Event(Trail(), 222).set_timestamp(TIMESTAMP)
