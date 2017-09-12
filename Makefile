@@ -45,6 +45,10 @@ $(ENV_DIR)/bin/coverage: $(ENV_DIR)/bin/python
 build_sasclient_egg: $(ENV_DIR)/bin/python setup.py
 	$(ENV_DIR)/bin/python setup.py bdist_egg -d $(EGG_DIR)
 
+.PHONY: build_sasclient_wheel
+build_sasclient_wheel: $(ENV_DIR)/bin/python setup.py
+	$(ENV_DIR)/bin/python setup.py bdist_wheel -d $(WHEELHOUSE)
+
 $(ENV_DIR)/.eggs_installed: $(ENV_DIR)/bin/python setup.py $(shell find src -type f -not -name "*.pyc")
 	$(ENV_DIR)/bin/python setup.py bdist_egg -d .eggs
 
