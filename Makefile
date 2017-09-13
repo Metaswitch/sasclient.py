@@ -47,6 +47,11 @@ build_sasclient_egg: $(ENV_DIR)/bin/python setup.py
 
 .PHONY: build_sasclient_wheel
 build_sasclient_wheel: $(ENV_DIR)/bin/python setup.py
+
+	# Ensure we have an up to date version of pip with wheel support
+	${ENV_DIR}/bin/pip install --upgrade pip==9.0.1
+	${ENV_DIR}/bin/pip install wheel==0.30.0
+
 	$(ENV_DIR)/bin/python setup.py bdist_wheel -d $(WHEELHOUSE)
 
 $(ENV_DIR)/.eggs_installed: $(ENV_DIR)/bin/python setup.py $(shell find src -type f -not -name "*.pyc")
