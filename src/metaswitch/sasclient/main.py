@@ -9,11 +9,21 @@ from metaswitch.sasclient import sender
 # The default SAS port, at the moment not configurable
 DEFAULT_SAS_PORT = 6761
 
+# The number of messages to queue if no value is provided.
+MINIMUM_QUEUE_LENGTH = 100
+DEFAULT_QUEUE_LENGTH = 10000
+
 logger = logging.getLogger(__name__)
 
 
 class Client(object):
-    def __init__(self, system_name, system_type, resource_identifier, sas_address, start=True):
+    def __init__(self,
+                 system_name,
+                 system_type,
+                 resource_identifier,
+                 sas_address,
+                 start=True,
+                 queue_length=DEFAULT_QUEUE_LENGTH):
         """
         Constructs the client and the message queue.
         :param system_name: The system name
@@ -23,8 +33,10 @@ class Client(object):
         :param sas_address: The hostname or IP address of the SAS server to communicate with, (no
                             port)
         :param start: Whether the SAS client should start immediately
+        :param queue_length: The maximum number of messages to queue for sending to SAS
         """
-        self._queue = Queue.Queue()
+        queue_length = max(queue_length, MINIMUM_QUEUE_LENGTH)
+        self._queue = Queue.Queue(maxsize=queue_length)
         self._stopper = None
         self._worker = None
 
@@ -83,7 +95,10 @@ class Client(object):
 
     def send(self, message):
         logger.debug("Queueing message for sending:\n%s", str(message))
-        self._queue.put(message)
+        try:
+            self._queue.put(message, block=False)
+        except Queue.Full:
+            self._worker.set_discarding()
 
 
 class Trail(object):
