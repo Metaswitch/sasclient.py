@@ -35,6 +35,7 @@ class MessageSender(threading.Thread):
         # Objects that the thread runs on
         self._stopper = stopper
         self._queue = queue
+        self._discarding = False
 
         # Information needed for Init message
         self._system_name = system_name
@@ -118,6 +119,23 @@ class MessageSender(threading.Thread):
                 self._reconnect_wait = MIN_RECONNECT_WAIT_TIME
                 self._connected = True
 
+        if self._discarding:
+            # Some logs have been discarded prior to this connection attempt.
+            # Make a log to indicate that this has happened, and what is likely
+            # to happen next.
+            msg = ("The SAS client library has filled its message queue, and has discarded "
+                   "some messages.  ")
+
+            if self._connected:
+                msg += ("The connection to SAS is currently active, so the backlog should "
+                        "now clear, allowing new SAS logs to be sent succesfully.")
+                self._discarding = False
+            else:
+                msg += ("There is currently no connection to SAS, so all new SAS logs are "
+                        "being discarded.  This will continue until the connection to SAS "
+                        "is restored.")
+            logger.error(msg)
+
     def disconnect(self):
         logger.debug("Disconnecting")
         # It's possible that the socket doesn't even exist yet, so we have nothing to do.
@@ -172,3 +190,13 @@ class MessageSender(threading.Thread):
         # interrupted.
         if not self._stopper.wait(reconnect_wait):
             self.connect()
+
+    def set_discarding(self):
+        logger.debug("SAS message queue full")
+
+        if not self._discarding:
+            # We've just filled the queue and started discarding messages.  Make a log.
+            logger.error("The messge queue is full.  Messages queued for sending to "
+                         "SAS have been discarded")
+
+        self._discarding = True
