@@ -39,6 +39,7 @@ class Client(object):
         self._queue = Queue.Queue(maxsize=queue_length)
         self._stopper = None
         self._worker = None
+        self._discarding = None
 
         self._system_name = system_name
         self._system_type = system_type
@@ -60,9 +61,11 @@ class Client(object):
 
         logger.info("Starting SAS client")
         self._stopper = threading.Event()
+        self._discarding = threading.Event()
         self._worker = sender.MessageSender(
             self._stopper,
             self._queue,
+            self._discarding,
             self._system_name,
             self._system_type,
             self._resource_identifier,
@@ -92,13 +95,19 @@ class Client(object):
 
         self._worker = None
         self._stopper = None
+        self._discarding = None
 
     def send(self, message):
         logger.debug("Queueing message for sending:\n%s", str(message))
         try:
             self._queue.put(message, block=False)
         except Queue.Full:
-            self._worker.set_discarding()
+            # The message queue is full.  Inform the worker that it will need
+            # to start discarding messages.
+            if not self._discarding.is_set():
+                logger.error("The message queue is full.  Messages queued for sending to SAS will "
+                             "be discarded")
+                self._discarding.set()
 
 
 class Trail(object):

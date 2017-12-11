@@ -25,6 +25,7 @@ class MessageSender(threading.Thread):
             self,
             stopper,
             queue,
+            discarding,
             system_name,
             system_type,
             resource_identifier,
@@ -35,7 +36,7 @@ class MessageSender(threading.Thread):
         # Objects that the thread runs on
         self._stopper = stopper
         self._queue = queue
-        self._discarding = False
+        self._discarding = discarding
 
         # Information needed for Init message
         self._system_name = system_name
@@ -75,6 +76,9 @@ class MessageSender(threading.Thread):
                 if not self.send_message(message):
                     logger.debug("Failed to send a message, flag that we need to reconnect")
                     self._connected = False
+                elif self._discarding.is_set():
+                    # Successfully sent a message - clear the discarding flag.
+                    self._discarding.clear()
 
             self.disconnect()
             self._connected = False
@@ -119,17 +123,25 @@ class MessageSender(threading.Thread):
                 self._reconnect_wait = MIN_RECONNECT_WAIT_TIME
                 self._connected = True
 
-        if self._discarding:
-            # Some logs have been discarded prior to this connection attempt.
-            # Make a log to indicate that this has happened, and what is likely
-            # to happen next.
+        if self._discarding.is_set():
+            # We've filled the message queue while trying to connect.  Discard all queued messages.
+            # We do so by repeatedly pulling items from the queue, as there is no thread-safe way
+            # of clearing a Queue.Queue in one shot.
+            try:
+                while True:
+                    message = self._queue.get(block=False)
+                    self._queue.task_done()
+            except Queue.Empty:
+                pass
+
+            # Make a log to indicate that messages have been discarded.
             msg = ("The SAS client library has filled its message queue, and has discarded "
                    "some messages.  ")
 
             if self._connected:
-                msg += ("The connection to SAS is currently active, so the backlog should "
-                        "now clear, allowing new SAS logs to be sent succesfully.")
-                self._discarding = False
+                msg += ("The connection to SAS has been restored, so future logs should be "
+                        "successfully sent to SAS.")
+                self._discarding.clear()
             else:
                 msg += ("There is currently no connection to SAS, so all new SAS logs are "
                         "being discarded.  This will continue until the connection to SAS "
@@ -190,13 +202,3 @@ class MessageSender(threading.Thread):
         # interrupted.
         if not self._stopper.wait(reconnect_wait):
             self.connect()
-
-    def set_discarding(self):
-        logger.debug("SAS message queue full")
-
-        if not self._discarding:
-            # We've just filled the queue and started discarding messages.  Make a log.
-            logger.error("The messge queue is full.  Messages queued for sending to "
-                         "SAS have been discarded")
-
-        self._discarding = True
